@@ -1,0 +1,10 @@
+paddr vaddr 0x000b_8000 ~ 0x0001_b7ff VAM 显卡模式显存
+paddr vaddr 0x0002_0000 ~ 0x0002_0fff 页目录基址
+paddr vaddr 0x0002_0000 ~ 0x0002_0fff 页目录[1024]
+paddr vaddr 0x0002_1000 ~ 0x0002_1fff 页目录[0]
+paddr vaddr 0x0002_2000 ~ 0x0002_2fff 页目录[1]
+paddr vaddr 0x0003_0000 ~ 0x0003_03ff loader
+paddr vaddr 0x8003_0000 ~ 0x8003_03ff loader
+paddr vaddr 0x8004_0000 ~ 0x8023_ffff 用于加载内核的缓冲区
+paddr vaddr 0x8010_0000 ~ 0x807f_ffff 内核占用
+
