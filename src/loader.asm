@@ -30,12 +30,13 @@ section loader vstart=const_vaddr_loader_entry
         xor ecx,ecx
         xor edx,edx
 
-        mov bx,[GET_PROGRAM_HEADER_COUNT(eax)]
-        mov ecx,[GET_PROGRAM_HEADER_OFFSET(eax)]
-        mov dx,[GET_PROGRAM_HEADER_SIZE(eax)]
-		mov esi,[GET_ENTRY(eax)]
+        mov bx,[GET_PROGRAM_HEADER_COUNT(eax)] ; 获取程序头表个数
+        mov ecx,[GET_PROGRAM_HEADER_OFFSET(eax)] ; 获取程序头表在缓冲区内的偏移
+        mov dx,[GET_PROGRAM_HEADER_SIZE(eax)] ; 获取每个程序头表的大小
+		mov esi,[GET_ENTRY(eax)] ; 获取入口地址
 
-        add eax,ecx
+        add eax,ecx ; 计算程序头表的地址
+		mov ecx,ebx ; ecx=程序头表的个数
 		add eax,edx ; 跳过 program header 的第一项，因为第一项不包含任何代码和运行时所需的数据。（如果哪天代码出了问题或许和没有加载第一项有关）
         mov [program_header_base_addr],eax
         mov [program_header_each_size],edx
@@ -129,7 +130,7 @@ section loader vstart=const_vaddr_loader_entry
 
 
 
-program_header_num dw 0
-program_header_base_addr dw 0
-program_header_each_size dw 0
-kernel_entry dw 0
+program_header_num dd 0
+program_header_base_addr dd 0
+program_header_each_size dd 0
+kernel_entry dd 0
