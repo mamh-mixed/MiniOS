@@ -75,12 +75,12 @@ section mbr vstart=0x7c00
 
 		; 清空页目录
 		.b0:
-			mov dword [const_paddr_page_dir_table_start+edi],0x0000_0000
+			mov dword [const_pvaddr_page_dir_table_start+edi],0x0000_0000
 			add edi,4
 			loop .b0
 
 		; 创建页目录自己对应的页目录项
-		mov edi,const_paddr_page_dir_table_start
+		mov edi,const_pvaddr_page_dir_table_start
 		mov dword [edi+4092],0x0002_0003
 
 		; 创建 0x0000_0000 ~ 0x003f_ffff 的页目录项，即低端 4MB 内存的页目录项。

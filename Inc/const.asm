@@ -12,7 +12,7 @@ const_num_disk_sector_kernel_count equ 4096
 cosnt_num_disk_sector_loader equ 1
 
 ; VGA 显卡模式下显存首地址
-const_paddr_vga_mode_start equ 0x000b_8000
+const_pvaddr_vga_mode_start equ 0x000b_8000
 
 ; VGA 显卡模式下显存大小
 const_num_vag_mode_addr_size equ 0x0000_ffff
@@ -30,7 +30,7 @@ const_num_gdt_selector_vga equ 0x18
 const_num_gdt_selector_4gb_kernel_stack equ 0x20
 
 ; 页目录物理基址地
-const_paddr_page_dir_table_start equ 0x20000
+const_pvaddr_page_dir_table_start equ 0x20000
 
 ; 内核加载器的入口地址（线性地址/虚拟地址）
 const_vaddr_loader_entry equ 0x8003_0000
