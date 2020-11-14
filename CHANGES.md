@@ -1,3 +1,10 @@
+## [297a12c](https://github.com/ADD-SP/MiniOS/commit/297a12c1f96ba6a8e834691309cff6f0687b487b)
+
+* 时间:2020-11-14
+* 信息::triangular_flag_on_post: Improved installation of interrupt
+* 变动：
+    * 主要使用 C 语言安装中断，包括中断向量表的初始化和 IDTR 的装载。
+
 ## [e6212f5](https://github.com/ADD-SP/MiniOS/commit/e6212f5aedcaf1c0c9411a1b4141bd44585dc16c)
 
 * 时间：2020-11-14
