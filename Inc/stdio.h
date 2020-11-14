@@ -38,4 +38,12 @@ void puts(const char *str);
 
 void putsWitchColor(const char *str, Byte *color);
 
+void putDec(int value);
+
+void putHex(int value);
+
+void putUDec(unsigned int value);
+
+void putUHex(unsigned int value);
+
 #endif

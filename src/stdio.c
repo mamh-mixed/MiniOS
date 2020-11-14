@@ -46,3 +46,31 @@ void puts(const char *str)
         putchar(*p);
     }
 }
+
+void putDec(int value)
+{
+    char str[30];
+    itoa(value, str, 10);
+    puts(str);
+}
+
+void putUDec(unsigned int value)
+{
+    char str[30];
+    uitoa(value, str, 10);
+    puts(str);
+}
+
+void putHex(int value)
+{
+    char str[30];
+    itoa(value, str, 16);
+    puts(str);
+}
+
+void putUHex(unsigned int value)
+{
+    char str[30];
+    uitoa(value, str, 16);
+    puts(str);
+}
