@@ -32,11 +32,13 @@ kernel : src/kernel.c Makefile
 	$(call gcc,0,obj/kernel.o,src/kernel.c)
 	$(call gcc,0,obj/string.o,src/string.c)
 	$(call gcc,0,obj/stdlib.o,src/stdlib.c)
+	$(call gcc,0,obj/stdio.o,src/stdio.c)
 	$(call gcc,0,obj/c_interrupt.o,src/interrupt.c)
 	$(call gcc,0,obj/debug.o,src/debug.c)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_interrupt.o,src/interrupt.asm)
 	$(call ld,main,0x80100000,bin/kernel.bin,\
-	obj/asm_util.o obj/c_util.o obj/string.o obj/stdlib.o obj/asm_interrupt.o obj/c_interrupt.o obj/debug.o obj/kernel.o)
+	obj/asm_util.o obj/c_util.o obj/string.o obj/stdlib.o obj/asm_interrupt.o \
+	obj/c_interrupt.o obj/debug.o obj/stdio.o obj/kernel.o)
 
 loader : src/loader.asm inc/const.asm Makefile
 	$(call nasm,$(NASM_FORMAT_BIN),bin/loader.bin,src/loader.asm)
