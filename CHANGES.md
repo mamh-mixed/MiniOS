@@ -1,3 +1,12 @@
+## [e6212f5](https://github.com/ADD-SP/MiniOS/commit/e6212f5aedcaf1c0c9411a1b4141bd44585dc16c)
+
+* 时间：2020-11-14
+* 信息：:triangular_flag_on_post: ASSERT is implemented.
+* 变动：
+    * 实现了 `ASSERT` 断言，主要用来调试。
+
+
+
 ## [1e65f92](https://github.com/ADD-SP/MiniOS/commit/1e65f9244b1e11d915aed745c6373d90dd079500)
 
 * 时间：2020-11-13
