@@ -1,3 +1,10 @@
+## [15f3a28](https://github.com/ADD-SP/MiniOS/commit/15f3a28836fee64884018b9f0a392bdae0b2e634)
+
+* 时间：2020-11-14
+* 信息：:triangular_flag_on_post: BitMap is implemented.
+* 变动：
+    * 实现了 BitMap。
+
 ## [5e1d286](https://github.com/ADD-SP/MiniOS/commit/5e1d286bcef4f27b77985e3b67626825cbc75894)
 
 * 时间：2020-11-14
