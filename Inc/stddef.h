@@ -4,9 +4,15 @@
 
 #define NULL ((void *)0)
 
+#define FALSE (0)
+
+#define TRUE (1)
+
 #define GDT_SELECTOR_DPL_0_4GB_CODE 0x10
 
 #define GDT_SELECTOR_DPL_0_4GB_DATA 0x08
+
+typedef unsigned char Bool;
 
 typedef unsigned char Byte;
 
