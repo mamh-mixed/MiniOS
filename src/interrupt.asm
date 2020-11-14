@@ -12,7 +12,7 @@ extern interruptDispatcher
 
 global _asm_intr_entry_table:
 
-; 中断例程入口表，每项前 148 Byte 为每个中断例程的代码，第 148 ~ 150 Byte 为对应例程的入口。
+; 中断例程入口表，每项前 200 Byte 为每个中断例程的代码，第 200 ~ 204 Byte 为对应例程的入口。
 _asm_intr_entry_table:
 
 ; 由于中断例程几乎都一样，所以用一个宏来批量创建。
@@ -46,7 +46,7 @@ _asm_intr_entry_table:
 %endmacro
 
 
-; 下面使用生成 0x00 ~ 0x19 、0x20 ~ 0x27 和 0x71 ~ 0x77 中断，0x70 号为实时时钟中断，需要单独编写。
+; 下面使用生成 0x00 ~ 0x19 、0x20 ~ 0x27 和 0x70 ~ 0x77 中断
 VECTOR 0x00,ZERO
 VECTOR 0x01,ZERO
 VECTOR 0x02,ZERO
