@@ -2,6 +2,7 @@
 
 void initIDT()
 {
+    // 根据 src/interrupt.asm 的内存布局，中断向量 0x00 ~ 0x27 的入口在 _asm_intr_entry_table[0x0...0x27] 中
     int idtIndex = 0;
     for (int i = 0; i < 0x28; i++, idtIndex++)
     {
@@ -9,6 +10,7 @@ void initIDT()
                                     INTERRULT_GATE_DESCRIPTOR__ATTRVUTE_DPL_0);
     }
 
+    // 根据 src/interrupt.asm 的内存布局，中断向量 0x70 ~ 0x77 的入口在 _asm_intr_entry_table[0x28...48] 中
     idtIndex = 0x70;
 
     for (int i = 0x28; i < 48; i++, idtIndex++)
@@ -20,8 +22,8 @@ void initIDT()
 
 void setupIDT()
 {
-    pIdt.baseAddr = idt;
-    pIdt.limit = 0x78 * 8 - 1;
+    pIdt.baseAddr = idt; // 获取 IDT 基址
+    pIdt.limit = 0x78 * 8 - 1; // 计算 IDT 界限，一共有 0x78 个索引，但并不是全部有效，有效的只有 0x00 ~ 0x27 和 0x70 ~ 0x77。
     asm volatile(
         "lidt (%%eax)"
         :
@@ -35,7 +37,7 @@ void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptG
     Uint16 high16 = ((Uint32)(entry)&0xffff0000) >> 16;
     descriptor->entryLow16 = low16;
     descriptor->entryHight16 = high16;
-    descriptor->dcount = 0;
+    descriptor->dcount = 0; // 这项永远为 0
     descriptor->entrySelector = GDT_SELECTOR_DPL_0_4GB_CODE;
     descriptor->attribute = attribute;
 }
