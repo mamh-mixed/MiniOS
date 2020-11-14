@@ -2,6 +2,7 @@
 
 int atoi(const char *str)
 {
+    ASSERT(str != NULL);
     int ret = 0;
     for (const char *p = str; *p != '\0'; p++)
     {
@@ -12,6 +13,7 @@ int atoi(const char *str)
 
 char *itoa(int value, char *str, int base)
 {
+    ASSERT(str != NULL);
     int bak = value; // 备份 value 
     char tempStr[50] = {0}; // 用来记录分解的各个数位，起到一个栈的作用，并且第一个元素是 '\0'。
     int index = 0;

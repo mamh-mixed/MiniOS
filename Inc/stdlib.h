@@ -3,6 +3,7 @@
 #define STDLIB_H
 
 #include <stddef.h>
+#include <debug.h>
 
 int atoi(const char *str);
 

@@ -3,6 +3,7 @@
 #define STRING_h
 
 #include <stddef.h>
+#include <debug.h>
 #include <asmfun.h>
 
 #define RGB_BALCK 0

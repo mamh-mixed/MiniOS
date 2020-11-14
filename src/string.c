@@ -38,6 +38,7 @@ void putcharWitchColor(const char c, Byte color)
 
 void puts(const char *str)
 {
+    ASSERT(str != NULL);
     for (const char *p = str; *p != '\0'; p++)
     {
         putchar(*p);
@@ -46,6 +47,8 @@ void puts(const char *str)
 
 void *memcpy(void *destin, void *source, unsigned n)
 {
+    ASSERT(destin != NULL);
+    ASSERT(source != NULL);
     char *dest = (char *)destin;
     char *src = (char *)source;
     for (unsigned i = 0; i < n; i++)
@@ -57,6 +60,7 @@ void *memcpy(void *destin, void *source, unsigned n)
 
 void *memset(void *s, int ch, unsigned n)
 {
+    ASSERT(s != NULL);
     char *dest = s;
     for (unsigned i = 0; i < n; i++)
     {
