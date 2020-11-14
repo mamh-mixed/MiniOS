@@ -1,3 +1,23 @@
+## [a238e69](https://github.com/ADD-SP/MiniOS/commit/a238e69f607df718abde5a3760b77f511e00ebbd)
+
+* 时间：2020-11-15
+* 信息：:triangular_flag_on_post: Creating common functions
+* 变动：
+    * 实现了 MemoryPool。
+
+## [13a755e](https://github.com/ADD-SP/MiniOS/commit/13a755ea56e62fd38d322328c0b559876ff67690)
+
+* 时间：2020-11-15
+* 信息：:triangular_flag_on_post: Creating common functions
+* 变动：
+    * 创建了下列工具函数：
+        * `char *uitoa(unsigned int value, char *str, int base);`
+        * `void putDec(int value);`
+        * `void putHex(int value);`
+        * `void putUDec(unsigned int value);`
+        * `void putUHex(unsigned int value);`
+
+
 ## [3279be9](https://github.com/ADD-SP/MiniOS/commit/3279be984483efb8a88e56bc31c65aadb16858ae)
 
 * 时间：2020-11-14
