@@ -1,3 +1,14 @@
+## [cfa39e4](https://github.com/ADD-SP/MiniOS/commit/cfa39e4b3e7f7c03cdcf53edf72164231202ed96)
+
+* 时间:2020-11-14
+* 信息：:triangular_flag_on_post: Creating common functions
+* 变动：
+    * 添加了一些工具函数
+        * `int memcmp(const void *a, const void *b, unsigned n);`
+        * `Uint32 strlen(const char *str);`
+        * `int strcpy(const char *a, const char *b);`
+        * `char* strchr(const char* s, char c);`
+
 ## [b139cd3](https://github.com/ADD-SP/MiniOS/commit/b139cd39847203e54482ac53c5fcc85e81fd98cf)
 
 * 时间:2020-11-14
