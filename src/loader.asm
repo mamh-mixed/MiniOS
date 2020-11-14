@@ -5,10 +5,10 @@
 %define GET_PROGRAM_HEADER_OFFSET(base_addr) (base_addr+28)
 %define GET_ENTRY(base_addr) (base_addr+24)
 
+[bits 32]
+
 
 section loader vstart=const_vaddr_loader_entry
-
-    [bits 32]
 
     jmp start
 
@@ -125,12 +125,8 @@ section loader vstart=const_vaddr_loader_entry
 		pop ebx
 		pop eax
 		ret
-        
 
-
-
-
-program_header_num dd 0
-program_header_base_addr dd 0
-program_header_each_size dd 0
-kernel_entry dd 0
+	program_header_num dd 0
+	program_header_base_addr dd 0
+	program_header_each_size dd 0
+	kernel_entry dd 0

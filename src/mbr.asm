@@ -83,33 +83,37 @@ section mbr vstart=0x7c00
 		mov edi,const_pvaddr_page_dir_table_start
 		mov dword [edi+4092],0x0002_0003
 
-		; 创建 0x0000_0000 ~ 0x003f_ffff 的页目录项，即低端 4MB 内存的页目录项。
-		mov dword [edi+0x00],0x0002_1003
-
-		; 创建 0x0040_0000 ~ 0x007f_ffff 的页目录项，即低端 4MB ~ 8MB 的页目录项
-		mov dword [edi+0x04],0x0002_2003
-
-		; 清空低端 8MB 内存对应页表
-		mov edi,0x0002_1000  ; 0x0002_1000 是页目录项中第 0 项的指向的页表的起始地址
-		xor esi,esi   ; esi 对应页表项下标
-		mov ecx,2048
+		; 填充页目录的第 0 ~ 16 项，对应线性地址的 0x0000_0000 ~ 0x03ff_ffff，共 64MB。
+		mov eax,0x0002_1003 ; eax 存储页目录项描述符
+		xor esi,esi ; esi 存储页目录索引
+		mov ecx,0x10 ; 循环 16 次，每次设置一个页目录项，每个页目录项对应 4MB 地址，共 64MB 地址。
 		.b1:
-			mov dword [edi+esi*0x04],0x0000_0000
+			mov [edi+esi*0x04],eax ; 写入页目录
+			add eax,0x1000 ; 计算新的页表地址
 			inc esi
 			loop .b1
+
+		; 清空低端 64MB 内存对应页表
+		mov edi,0x0002_1000  ; 0x0002_1000 是页目录项中第 0 项的指向的页表的起始地址
+		xor esi,esi   ; esi 对应页表项下标
+		mov ecx,0x4000
+		.b2:
+			mov dword [edi+esi*0x04],0x0000_0000
+			inc esi
+			loop .b2
 		
-		; 创建低端 8MB 内存对应的页表
+		; 创建低端 64MB 内存对应的页表
 		xor eax,eax   ; eax 存储起始的物理地址
 		xor esi,esi   ; esi 对应页表项下标
-		mov ecx,2048
+		mov ecx,0x4000
 
-		.b2:
+		.b3:
 			mov ebx,0x03  ; 页表项属性
 			or ebx,eax  ; 形成页表项
 			mov [edi+esi*0x4],ebx  ; 写入页表项
 			inc esi
 			add eax,0x1000  ; 物理地址每次增加 4096KB
-			loop .b2
+			loop .b3
 
 		; 令CR3寄存器指向页目录，并正式开启页功能 
         mov eax,0x00020000                 ;PCD=PWT=0
@@ -119,18 +123,20 @@ section mbr vstart=0x7c00
         or eax,0x80000000
         mov cr0,eax                        ;开启分页机制
 
-		; 创建线性地址 0x8000_0000 ~ 0x803f_ffff 对应的页目录项
+		; 创建线性地址 0x8000_0000 ~ 0x83f_ffff 对应的页目录项，共 64MB。
 		mov edi,0xffff_f000  ; 页目录的线性地址
-		mov eax,0x8000_0000
-		shr eax,22	; 右移 22 位得到高 10 位，即线性地址的高 10 位，即页目录项索引。
-		shl eax,2  ; 页目录索引 * 4 得到页目录项在页目录内的偏移
-		mov dword [edi+eax],0x0002_1003 ; 将物理内存的低端 4MB 映射到线性地址的 0x8000_0000 ~ 0x800f_ffff
 
-		; 创建线性地址 0x8040_0000 ~ 0x807f_ffff 对应的页目录项
-		mov eax,0x8040_0000
-		shr eax,22	; 右移 22 位得到高 10 位，即线性地址的高 10 位，即页目录项索引。
-		shl eax,2  ; 页目录索引 * 4 得到页目录项在页目录内的偏移
-		mov dword [edi+eax],0x0002_2003 ; 将物理内存的低端 4MB ~ 8MB 映射到线性地址的 0x8040_0000 ~ 0x807f_ffff
+		mov eax,0x8000_0000 ; eax 存储线性地址
+		mov ebx,0x0002_1003 ; ebx 存储页表项描述符
+		mov ecx,0x10 ; 循环 16 次，每次设置 4MB 的地址，共 64MB。
+		.b4:
+			mov edx,eax
+			shr edx,22	; 右移 22 位得到高 10 位，即线性地址的高 10 位，即页目录项索引。
+			shl edx,2  ; 页目录索引 * 4 得到页目录项在页目录内的偏移
+			mov dword [edi+edx],ebx ; 写入页表
+			add eax,0x0040_0000 ; 线性地址增加 4MB
+			add ebx,0x1000 ; 页表描述符中的物理基址增加 4KB
+			loop .b4
 
 		sgdt [pgdt]  ; 取出 GDTR 
 		mov eax,[pgdt+2]  ; 取出 GDT 基址

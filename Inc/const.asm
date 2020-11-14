@@ -30,10 +30,10 @@ const_num_gdt_selector_vga equ 0x18
 const_num_gdt_selector_4gb_kernel_stack equ 0x20
 
 ; 页目录物理基址地
-const_pvaddr_page_dir_table_start equ 0x20000
+const_pvaddr_page_dir_table_start equ 0x0002_0000
 
 ; 内核加载器的入口地址（线性地址/虚拟地址）
-const_vaddr_loader_entry equ 0x8003_0000
+const_vaddr_loader_entry equ 0x8003_2000
 
 ; 加载内核时所用的缓冲区
 const_addr_buf equ 0x8004_0000
