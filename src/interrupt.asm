@@ -10,6 +10,11 @@
 ; 中断调度器，所有的中断李成均调用此函数以实现真正的功能
 extern interruptDispatcher
 
+global _asm_intr_entry_table:
+
+; 中断例程入口表，每项前 148 Byte 为每个中断例程的代码，第 148 ~ 150 Byte 为对应例程的入口。
+_asm_intr_entry_table:
+
 ; 由于中断例程几乎都一样，所以用一个宏来批量创建。
 %macro VECTOR 2
     section .text
@@ -34,6 +39,9 @@ extern interruptDispatcher
             pop eax
 
             iret
+        times 200-($-_asm_int%1_entry) db 0
+; section .data align=1
+    dd _asm_int%1_entry
 
 %endmacro
 
@@ -80,13 +88,6 @@ VECTOR 0x25,ZERO
 VECTOR 0x26,ZERO
 VECTOR 0x27,ZERO
 
-VECTOR 0x71,ZERO
-VECTOR 0x72,ZERO
-VECTOR 0x73,ZERO
-VECTOR 0x74,ZERO
-VECTOR 0x75,ZERO
-VECTOR 0x76,ZERO
-VECTOR 0x77,ZERO
 
 section .text
 
@@ -112,6 +113,21 @@ section .text
         pop eax
 
         iret
+
+    times 200-($-_asm_int0x70_entry) db 0
+
+; section .data align=1
+    dd _asm_int0x70_entry
+
+VECTOR 0x71,ZERO
+VECTOR 0x72,ZERO
+VECTOR 0x73,ZERO
+VECTOR 0x74,ZERO
+VECTOR 0x75,ZERO
+VECTOR 0x76,ZERO
+VECTOR 0x77,ZERO
+
+
 
 section .text
     global _asm_init_8259a
@@ -156,33 +172,3 @@ section .text
 		
         pop eax
 		ret
-
-
-section .text
-
-    global _asm_setup_idt
-
-    _asm_setup_idt:
-        push eax
-
-        mov word [_asm_pidt],0x3bf ; 已经安装的中断向量号最大为 0x77，所以 IDT 的界限应该为 0x77 * 0x8 - 0x01 = 0x3bf。
-        mov eax,_asm_idt ; 取出 IDT 基址
-        mov [_asm_pidt+0x2],eax ; 写入 IDT 基址
-
-        lidt[_asm_pidt] ; 加载到 IDTR
-
-        pop eax
-        ret
-
-
-section .data
-
-    global _asm_pidt
-
-    _asm_pidt dw 0
-              dd 0
-
-    global _asm_idt
-
-    ; IDT 表
-    _asm_idt: times 1024 dd 0

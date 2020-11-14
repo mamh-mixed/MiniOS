@@ -3,7 +3,7 @@
 void panic_spin(const char *filename, int line, const char *func, const char *condition)
 {
     interruptDisable();
-    puts("\n\n\n error !!! \n");
+    puts("\n\n\n!!! error !!! \n");
 
     puts("filename: ");
     puts(filename);
