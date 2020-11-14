@@ -2,7 +2,7 @@
 
 #define STRING_h
 
-#include <type.h>
+#include <stddef.h>
 #include <asmfun.h>
 
 #define RGB_BALCK 0
@@ -22,13 +22,13 @@
 
 #define CONBIN_COLOR(isFlash, isLight, backColor, charColor) ((isFlash << 7) | (isLight << 3) | (backColor < 6) | (charColor))
 
-void putchar(char c);
+void putchar(const char c);
 
-void putcharWitchColor(char c, Byte color);
+void putcharWitchColor(const char c, Byte color);
 
-void puts(char *str);
+void puts(const char *str);
 
-void putsWitchColor(char *str, Byte *color);
+void putsWitchColor(const char *str, Byte *color);
 
 void *memcpy(void *destin, void *source, unsigned n);
 

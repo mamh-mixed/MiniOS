@@ -2,7 +2,7 @@
 
 #define ASM_FUN_H 0
 
-#include <type.h>
+#include <stddef.h>
 
 // 获取光标的位置
 extern unsigned int _asm_get_cursor();

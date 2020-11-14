@@ -1,12 +1,12 @@
 #include <string.h>
 
-void putchar(char c)
+void putchar(const char c)
 {
     Byte color = 0x9;
     putcharWitchColor(c, CONBIN_COLOR(NO_FLASH, NO_LIGHT, RGB_BALCK, RGB_WHITE));
 }
 
-void putcharWitchColor(char c, Byte color)
+void putcharWitchColor(const char c, Byte color)
 {
     // 显存首地址
     unsigned char *pVgaMem = (unsigned char *)0x000b8000;
@@ -36,9 +36,9 @@ void putcharWitchColor(char c, Byte color)
     _asm_set_cursor(cursor);
 }
 
-void puts(char *str)
+void puts(const char *str)
 {
-    for (char *p = str; *p != '\0'; p++)
+    for (const char *p = str; *p != '\0'; p++)
     {
         putchar(*p);
     }

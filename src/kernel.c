@@ -4,9 +4,21 @@ int main()
 {
 	_asm_init_8259a();
 	installIDT();
+	int i = 0;
+	ASSERT(i == 1);
 	while (1)
 	{
 		/* code */
+	}
+}
+
+void interruptDispatcher(Uint32 vevtor, Uint32 errorCode)
+{
+	char str[50];
+	if (vevtor != 0x20 && vevtor != 0x70)
+	{
+		puts(itoa(vevtor, str, 16));
+		puts("\n");
 	}
 }
 
@@ -164,14 +176,4 @@ void installIDT()
 	_asm_setup_idt();
 
 	__asm__("sti;");
-}
-
-void interruptDispatcher(Uint32 vevtor, Uint32 errorCode)
-{
-	char str[50];
-	if (vevtor != 0x20)
-	{
-		puts(itoa(vevtor, str, 16));
-		puts("\n");
-	}
 }

@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <debug.h>
 
 #define SETUP_INTERRUPT_DESCRIPTOR(idt, index, entry, low32, high32) { \
     (low32) = 0; \
