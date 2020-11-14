@@ -1,6 +1,32 @@
+## [5e1d286](https://github.com/ADD-SP/MiniOS/commit/5e1d286bcef4f27b77985e3b67626825cbc75894)
+
+* 时间：2020-11-14
+* 信息：:truck: Move some functions, macro to stdio
+* 变动：
+    * 从 `string.h` 和 `string.c` 中移动下列函数/宏到 `stdio.h` 和 `stdio.c `中。
+        * `#define RGB_BALCK 0`
+        * `#define RGB_BULE 1`
+        * `#define RGB_GREEN 2`
+        * `#define RGB_CYAN 3`
+        * `#define RGB_RED 4`
+        * `#define RGB_MAGENTA 5`
+        * `#define RGB_BROWN 6`
+        * `#define RGB_WHITE 7`
+        * `#define NO_FLASH 0`
+        * `#define FLASH 1`
+        * `#define NO_LIGHT 0`
+        * `#define LIGHT 1`
+        * `#define CONBIN_COLOR(isFlash, isLight, backColor, charColor) ((isFlash << 7) | (isLight << 3) | (backColor < 6) | (charColor))`
+        * `extern unsigned int _asm_get_cursor();`
+        * `extern void _asm_set_cursor(Uint16 pos);`
+        * `void putchar(const char c);`
+        * `void putcharWitchColor(const char c, Byte color);`
+        * `void puts(const char *str);`
+        * `void putsWitchColor(const char *str, Byte *color);`
+
 ## [cfa39e4](https://github.com/ADD-SP/MiniOS/commit/cfa39e4b3e7f7c03cdcf53edf72164231202ed96)
 
-* 时间:2020-11-14
+* 时间：2020-11-14
 * 信息：:triangular_flag_on_post: Creating common functions
 * 变动：
     * 添加了一些工具函数
@@ -11,7 +37,7 @@
 
 ## [b139cd3](https://github.com/ADD-SP/MiniOS/commit/b139cd39847203e54482ac53c5fcc85e81fd98cf)
 
-* 时间:2020-11-14
+* 时间：2020-11-14
 * 信息：:triangular_flag_on_post: Add some ASSERT
 * 变动：
     * 为下列函数添加断言，检查一些参数的合法性。
@@ -23,7 +49,7 @@
 
 ## [297a12c](https://github.com/ADD-SP/MiniOS/commit/297a12c1f96ba6a8e834691309cff6f0687b487b)
 
-* 时间:2020-11-14
+* 时间：2020-11-14
 * 信息：:triangular_flag_on_post: Improved installation of interrupt
 * 变动：
     * 主要使用 C 语言安装中断，包括中断向量表的初始化和 IDTR 的装载。
