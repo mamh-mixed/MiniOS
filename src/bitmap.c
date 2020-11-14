@@ -16,7 +16,7 @@ Bool bitMapTest(const BitMap *bitMap, Uint32 bitIndex)
     return (bitMap->bits[index]) & (0x00000001 << (bitIndex % 8));
 }
 
-int bitMapScan(const BitMap *bitMap, Uint32 bitLength)
+int bitMapScanAndSet(BitMap *bitMap, Uint32 bitLength)
 {
     ASSERT(bitMap != NULL);
     Int32 byteIndex = 0;
@@ -35,7 +35,7 @@ int bitMapScan(const BitMap *bitMap, Uint32 bitLength)
     }
 
     Int32 bitIndex = byteIndex * 8 + bitIndexInByte;
-    Int32 leftBitIndex = bitIndex, rightBitIndex = bitIndex, limit = byteIndex * bitMap->byteLength;
+    Int32 leftBitIndex = bitIndex, rightBitIndex = bitIndex, limit = bitMap->byteLength * 8;
     Int32 count = 1;
     while (leftBitIndex < limit && rightBitIndex < limit)
     {
@@ -48,6 +48,7 @@ int bitMapScan(const BitMap *bitMap, Uint32 bitLength)
             }
             else
             {
+                ++rightBitIndex;
                 leftBitIndex = rightBitIndex;
                 count = 0;
             }
@@ -57,7 +58,13 @@ int bitMapScan(const BitMap *bitMap, Uint32 bitLength)
             break;
         }
     }
-    return (count == bitLength) ? leftBitIndex : -1;
+
+    if (count == bitLength)
+    {
+        bitMapSetBitRange(bitMap, leftBitIndex, count);
+        return leftBitIndex;
+    }
+    return -1;
 }
 
 void bitMapSetBit(BitMap *bitMap, Uint32 bitIndex)
@@ -67,11 +74,29 @@ void bitMapSetBit(BitMap *bitMap, Uint32 bitIndex)
     bitMap->bits[index] |= 0x00000001 << (bitIndex % 8);
 }
 
+void bitMapSetBitRange(BitMap *bitMap, Uint32 bitIndex, Uint32 count)
+{
+    ASSERT(bitMap != NULL);
+    for (Uint32 i = 0; i < count; i++)
+    {
+        bitMapSetBit(bitMap, bitIndex + i);
+    }
+}
+
 void bitMapUnSetBit(BitMap *bitMap, Uint32 bitIndex)
 {
     ASSERT(bitMap != NULL);
     Uint32 index = bitIndex / 8;
     bitMap->bits[index] &= ~(0x00000001 << (bitIndex % 8));
+}
+
+void bitMapUnSetBitRange(BitMap *bitMap, Uint32 bitIndex, Uint32 count)
+{
+    ASSERT(bitMap != NULL);
+    for (Uint32 i = 0; i < count; i++)
+    {
+        bitMapUnSetBit(bitMap, bitIndex + i);
+    }
 }
 
 void bitMapClear(BitMap *bitMap)

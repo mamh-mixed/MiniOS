@@ -7,6 +7,8 @@
 #include <string.h>
 #include <interrupt.h>
 #include <debug.h>
+#include <bitmap.h>
+#include <memory.h>
 
 
 #endif

@@ -45,7 +45,7 @@ void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptG
 void interruptDispatcher(Uint32 vevtor, Uint32 errorCode)
 {
     char str[50];
-    if (vevtor != 0x27 && vevtor != 0x77 && vevtor != 0x20)
+    if (vevtor != 0x27 && vevtor != 0x77 && vevtor != 0x20 && vevtor != 0x70)
     {
         puts(itoa(vevtor, str, 16));
         puts("\n");

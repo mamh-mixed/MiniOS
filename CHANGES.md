@@ -90,7 +90,6 @@
 * 时间：2020-11-13
 * 信息：:triangular_flag_on_post: IDT is installed.
 * 变动：
-    * 修复了 bug#0
     * 安装了 0x00 ~ 0x1f、0x20 ~ 0x27、0x70 ~ 0x77 的中断描述符。
     * 初始化了 8259A 芯片。
     * 启用了 IDTR 寄存器。

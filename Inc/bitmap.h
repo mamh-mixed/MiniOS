@@ -18,11 +18,15 @@ void bitMapInit(BitMap *bitMap, Byte *bits, Uint32 byteLength);
 
 Bool bitMapTest(const BitMap *bitMap, Uint32 bitIndex);
 
-int bitMapScan(const BitMap *bitMap, Uint32 bitLength);
+int bitMapScanAndSet(BitMap *bitMap, Uint32 bitLength);
 
 void bitMapSetBit(BitMap *bitMap, Uint32 bitIndex);
 
+void bitMapSetBitRange(BitMap *bitMap, Uint32 bitIndex, Uint32 count);
+
 void bitMapUnSetBit(BitMap *bitMap, Uint32 bitIndex);
+
+void bitMapUnSetBitRange(BitMap *bitMap, Uint32 bitIndex, Uint32 count);
 
 void bitMapClear(BitMap *bitMap);
 
