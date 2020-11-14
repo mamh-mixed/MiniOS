@@ -1,7 +1,19 @@
+## [b139cd3](https://github.com/ADD-SP/MiniOS/commit/b139cd39847203e54482ac53c5fcc85e81fd98cf)
+
+* 时间:2020-11-14
+* 信息：:triangular_flag_on_post: Add some ASSERT
+* 变动：
+    * 为下列函数添加断言，检查一些参数的合法性。
+        * `char *itoa(int value, char *str, int base)`
+        * `int atoi(const char *str)`
+        * `void puts(const char *str)`
+        * `void *memcpy(void *destin, void *source, unsigned n)`
+        * `void *memset(void *s, int ch, unsigned n)`
+
 ## [297a12c](https://github.com/ADD-SP/MiniOS/commit/297a12c1f96ba6a8e834691309cff6f0687b487b)
 
 * 时间:2020-11-14
-* 信息::triangular_flag_on_post: Improved installation of interrupt
+* 信息：:triangular_flag_on_post: Improved installation of interrupt
 * 变动：
     * 主要使用 C 语言安装中断，包括中断向量表的初始化和 IDTR 的装载。
 
