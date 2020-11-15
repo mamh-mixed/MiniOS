@@ -1,3 +1,17 @@
+## [79b86a0](https://github.com/ADD-SP/MiniOS/commit/79b86a05fe065e86e454c91884db5194fadf0a2b)
+
+* 时间：2020-11-15
+* 信息：:triangular_flag_on_post: Creating common functions
+* 变动：
+    * 实现了下列工具函数：
+        * `Bool isPageDescriptorPresent(Uint32 descriptor);`
+        * `Uint32 makePageDescriptor(void *physicalAddr, Uint32 present, Uint32 rw, Uint32 us, Uint32 pwt, Uint32 pcd, Uint32 gloabl);`
+        * `void installA4KBPage(Uint32 linearAddr);`
+        * `void *sysMalloc(Uint32 byteLength);`
+        * `void sysFree(void *startAddr);`
+        * `void *phyMalloc4KB();`
+        * `void phyFree(void *startAddr);`
+
 ## [a238e69](https://github.com/ADD-SP/MiniOS/commit/a238e69f607df718abde5a3760b77f511e00ebbd)
 
 * 时间：2020-11-15
@@ -10,7 +24,7 @@
 * 时间：2020-11-15
 * 信息：:triangular_flag_on_post: Creating common functions
 * 变动：
-    * 创建了下列工具函数：
+    * 实现了下列工具函数：
         * `char *uitoa(unsigned int value, char *str, int base);`
         * `void putDec(int value);`
         * `void putHex(int value);`
