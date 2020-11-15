@@ -6,6 +6,8 @@ int main()
 	initIDT();
 	setupIDT();
 	interruptEnable();
+	initMemoryManagement();
+
 	while (1)
 	{
 		/* code */
