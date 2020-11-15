@@ -14,11 +14,11 @@
 #define INTERRULT_GATE_DESCRIPTOR__ATTRVUTE_DPL_0 0X8e
 #define INTERRULT_GATE_DESCRIPTOR_ATTRVUTE_DPL_3 0XEe
 
-enum InterruptStatus
+typedef enum
 {
     INTERRUPT_OFF,
     INTERRUPT_ON
-};
+} InterruptStatus;
 
 typedef void *InterruptGateEntry;
 
@@ -66,12 +66,14 @@ void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptG
 
 void interruptDispatcher(Uint32 vevtor, Uint32 errorCode);
 
-enum InterruptStatus interruptGetStatus();
+InterruptStatus interruptGetStatus();
 
-enum InterruptStatus interruptSetStatus(enum InterruptStatus status);
+InterruptStatus interruptSetStatus(InterruptStatus status);
 
-enum InterruptStatus interruptEnable();
+InterruptStatus interruptEnable();
 
-enum InterruptStatus interruptDisable();
+InterruptStatus interruptDisable();
+
+
 
 #endif

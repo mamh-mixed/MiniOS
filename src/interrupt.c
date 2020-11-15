@@ -52,21 +52,21 @@ void interruptDispatcher(Uint32 vevtor, Uint32 errorCode)
     }
 }
 
-enum InterruptStatus interruptGetStatus()
+InterruptStatus interruptGetStatus()
 {
     Uint32 eflags = 0;
     GET_EFLAGS(eflags);
     return (EFLAGS_IF & eflags) ? INTERRUPT_ON : INTERRUPT_OFF;
 }
 
-enum InterruptStatus interruptSetStatus(enum InterruptStatus status)
+InterruptStatus interruptSetStatus(InterruptStatus status)
 {
     return status & INTERRUPT_ON ? interruptEnable() : interruptDisable();
 }
 
-enum InterruptStatus interruptEnable()
+InterruptStatus interruptEnable()
 {
-    enum InterruptStatus oldStatus;
+    InterruptStatus oldStatus;
     if (INTERRUPT_ON == interruptGetStatus())
     {
         oldStatus = INTERRUPT_ON;
@@ -78,9 +78,9 @@ enum InterruptStatus interruptEnable()
     return oldStatus;
 }
 
-enum InterruptStatus interruptDisable()
+InterruptStatus interruptDisable()
 {
-    enum InterruptStatus oldStatus;
+    InterruptStatus oldStatus;
     if (INTERRUPT_OFF == interruptGetStatus())
     {
         oldStatus = INTERRUPT_OFF;
