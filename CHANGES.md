@@ -1,3 +1,13 @@
+## [63482f2](https://github.com/ADD-SP/MiniOS/commit/63482f21748e62849cb79c0b3003526d10a017b0)
+
+* 时间：2020-11-15
+* 信息：:triangular_flag_on_post: :triangular_flag_on_post: Semaphore and Thread is implemented.
+* 变动：
+    * 实现了一个简单的线程模型，并通过 0x70 中断实现切换。这只是一个简单的模型，后续还要改。
+    * 修复了 BUG#1。
+    * 实现了记录型信号量，目前仅用于 stdout。
+
+
 ## [79b86a0](https://github.com/ADD-SP/MiniOS/commit/79b86a05fe065e86e454c91884db5194fadf0a2b)
 
 * 时间：2020-11-15
