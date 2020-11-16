@@ -91,16 +91,68 @@ VECTOR 0x27,ZERO
 
 section .text
 
-   global _asm_int0x70_entry:
+    
+    extern getNextEsp0
+    extern setCurEsp0
+    extern goNextTcb
+    global _asm_int0x70_entry:
 
     _asm_int0x70_entry:
             
         push eax
-
+        push ecx
+        push edx
         push dword 0x00 ; 压入无用数据用来维持栈平衡
         push dword 0x70 ; 压入中断向量号
         call interruptDispatcher
         add esp,8
+        pop edx
+        pop ecx
+        pop eax
+
+
+        push ds
+        push es
+        push fs
+        push gs
+        pushad
+
+        mov [pesp],esp ; 提前保存当前的栈顶指针，这个栈顶指针将用来恢复上下文。
+        push eax
+        push ecx
+        push edx
+        push dword [pesp]
+        call setCurEsp0
+        add esp,4
+        pop edx
+        pop ecx
+        pop eax
+
+        push eax
+        push ecx
+        push edx
+        call getNextEsp0
+        mov [pesp],eax
+        pop edx
+        pop ecx
+        pop eax
+
+        mov esp,[pesp]
+        popad
+        pop gs
+        pop fs
+        pop es
+        pop ds
+
+        push eax
+        push ecx
+        push edx
+        call goNextTcb
+        pop edx
+        pop ecx
+        pop eax
+
+        push eax
 
         mov al,0x20 ; 中断结束命令EOI
         out 0xa0,al ; 向8259A从片发送
@@ -113,6 +165,10 @@ section .text
         pop eax
 
         iret
+
+        
+
+        pesp dd 0
 
     times 200-($-_asm_int0x70_entry) db 0
 

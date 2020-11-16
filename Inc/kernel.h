@@ -9,6 +9,7 @@
 #include <debug.h>
 #include <bitmap.h>
 #include <memory.h>
-
+#include <thread.h>
+#include <sync.h>
 
 #endif

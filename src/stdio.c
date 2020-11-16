@@ -1,5 +1,13 @@
 #include <stdio.h>
 
+Semaphore stdoutSemaphore;
+
+void initStdout()
+{
+    _asm_set_cursor(0);
+    semaphoreInit(&stdoutSemaphore, 1);
+}
+
 void putchar(const char c)
 {
     Byte color = 0x9;
@@ -15,6 +23,17 @@ void putcharWitchColor(const char c, Byte color)
     if (c == '\n')
     {
         cursor = (lineNum + 1) * 80;
+        if (cursor + 1 >= 2000)
+        {
+            pVgaMem[cursor * 2 + 1] = color;
+            memcpy(pVgaMem, pVgaMem + 80 * 2 * 1, 80 * 2 * 24);
+            for (int i = 0; i < 80; i++)
+            {
+                pVgaMem[80 * 2 * 24 + i * 2] = ' ';
+                pVgaMem[80 * 2 * 24 + i * 2 + 1] = 0x07;
+            }
+            cursor = 24 * 80;
+        }
     }
     else if (c == 0x0d)
     {
@@ -22,11 +41,15 @@ void putcharWitchColor(const char c, Byte color)
     }
     else if (cursor + 1 >= 2000)
     {
-        memcpy(pVgaMem, pVgaMem + 80 * 2, 80 * 2 * 24);
-        cursor = 24 * 80;
         pVgaMem[cursor * 2] = c;
         pVgaMem[cursor * 2 + 1] = color;
-        cursor++;
+        memcpy(pVgaMem, pVgaMem + 80 * 2 * 1, 80 * 2 * 24);
+        for (int i = 0; i < 80; i++)
+        {
+            pVgaMem[80 * 2 * 24 + i * 2] = ' ';
+            pVgaMem[80 * 2 * 24 + i * 2 + 1] = 0x07;
+        }
+        cursor = 24 * 80;
     }
     else
     {
@@ -40,6 +63,17 @@ void putcharWitchColor(const char c, Byte color)
 
 void puts(const char *str)
 {
+    semaphoreGet(&stdoutSemaphore);
+    ASSERT(str != NULL);
+    for (const char *p = str; *p != '\0'; p++)
+    {
+        putchar(*p);
+    }
+    semaphoreRelease(&stdoutSemaphore);
+}
+
+void putsNoSync(const char *str)
+{
     ASSERT(str != NULL);
     for (const char *p = str; *p != '\0'; p++)
     {
@@ -49,28 +83,56 @@ void puts(const char *str)
 
 void putDec(int value)
 {
-    char str[30];
+    char str[100] = {0};
     itoa(value, str, 10);
     puts(str);
 }
 
+void putDecNoSync(int value)
+{
+    char str[100] = {0};
+    itoa(value, str, 10);
+    putsNoSync(str);
+}
+
 void putUDec(unsigned int value)
 {
-    char str[30];
+    char str[100] = {0};
     uitoa(value, str, 10);
     puts(str);
 }
 
+void putUDecNoSync(unsigned int value)
+{
+    char str[100] = {0};
+    uitoa(value, str, 10);
+    putsNoSync(str);
+}
+
 void putHex(int value)
 {
-    char str[30];
+    char str[100] = {0};
     itoa(value, str, 16);
     puts(str);
 }
 
+void putHexNoSync(int value)
+{
+    char str[100] = {0};
+    itoa(value, str, 16);
+    putsNoSync(str);
+}
+
 void putUHex(unsigned int value)
 {
-    char str[30];
+    char str[100] = {0};
     uitoa(value, str, 16);
     puts(str);
+}
+
+void putUHexNoSync(unsigned int value)
+{
+    char str[100] = {0};
+    uitoa(value, str, 16);
+    putsNoSync(str);
 }

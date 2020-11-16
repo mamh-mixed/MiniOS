@@ -23,19 +23,6 @@ typedef struct
     Uint32 allocUnit;
 } MemoryPool;
 
-// 内核占有的 32 MB 内存对应的位图，1bit 对应 1Byte。
-Byte bitsForKernelVaddr[KERNEL_VADDR_BYTE_LENGTH];
-
-// 高 3.9 GB 的物理内存位图。1bit 对应 4096KB
-Byte bitsForPAddr[PADDR_BYTE_LENGTH];
-BitMap bitMapForPAddr;
-
-// 内核虚拟地址池
-MemoryPool kernelVaddrPool;
-
-// 高 3.9 GB 物理地址池
-MemoryPool physicalAddrPool;
-
 void initMemoryManagement();
 
 void memoryPoolInit(MemoryPool *memoryPool, Byte *bits, Uint32 startAddr, Uint32 unitCount, Uint32 allocUnit);

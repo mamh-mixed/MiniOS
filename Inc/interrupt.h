@@ -48,12 +48,6 @@ typedef struct
 
 #pragma pack()
 
-extern InterruptGateEntryTable _asm_intr_entry_table[48];
-
-IDTR pIdt;
-
-InterruptGateDescriptor idt[0x78];
-
 extern void _asm_setup_idt();
 
 extern void _asm_init_8259a();
@@ -64,7 +58,7 @@ void setupIDT();
 
 void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptGateEntry entry, Uint8 attribute);
 
-void interruptDispatcher(Uint32 vevtor, Uint32 errorCode);
+void interruptDispatcher(Uint32 vector, Uint32 errorCode);
 
 InterruptStatus interruptGetStatus();
 

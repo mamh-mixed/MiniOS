@@ -9,16 +9,15 @@ void panic_spin(const char *filename, int line, const char *func, const char *co
     puts(filename);
     puts("\n");
 
-    char str[20];
     puts("line: ");
-    puts(itoa(line, str, 10));
+    putDec(line);
     puts("\n");
 
     puts("function: ");
     puts(func);
     puts("\n");
 
-    puts("condition:");
+    puts("condition: ");
     puts(condition);
     puts("\n");
 

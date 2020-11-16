@@ -12,6 +12,8 @@
 
 #define GDT_SELECTOR_DPL_0_4GB_DATA 0x08
 
+#define GDT_SELECTOR_DPL_0_4GB_STACK 0x20
+
 typedef unsigned char Bool;
 
 typedef unsigned char Byte;

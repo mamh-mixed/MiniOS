@@ -1,5 +1,11 @@
 #include <interrupt.h>
 
+extern InterruptGateEntryTable _asm_intr_entry_table[48];
+
+IDTR pIdt;
+
+InterruptGateDescriptor idt[0x78];
+
 void initIDT()
 {
     // 根据 src/interrupt.asm 的内存布局，中断向量 0x00 ~ 0x27 的入口在 _asm_intr_entry_table[0x0...0x27] 中
@@ -28,7 +34,8 @@ void setupIDT()
         "lidt (%%eax)"
         :
         : "a"(&pIdt)
-        :);
+        :"memory"
+    );
 }
 
 void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptGateEntry entry, Uint8 attribute)
@@ -42,13 +49,14 @@ void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptG
     descriptor->attribute = attribute;
 }
 
-void interruptDispatcher(Uint32 vevtor, Uint32 errorCode)
+void interruptDispatcher(Uint32 vector, Uint32 errorCode)
 {
     char str[50];
-    if (vevtor != 0x27 && vevtor != 0x77 && vevtor != 0x20 && vevtor != 0x70)
+    if (vector >= 0 && vector <= 0x13)
     {
-        puts(itoa(vevtor, str, 16));
+        puts(itoa(vector, str, 16));
         puts("\n");
+        asm volatile("hlt;");
     }
 }
 
