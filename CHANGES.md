@@ -1,3 +1,11 @@
+## [b525d81](https://github.com/ADD-SP/MiniOS/commit/b525d8162332c0b117fbcb52beaefa445a12bf34)
+
+* 时间：2020-11-18
+* 信息：:triangular_flag_on_post: :triangular_flag_on_post: Semaphore and Thread is implemented.
+* 变动：
+    * 实现了键盘驱动，但并不支持所有键码。已经支持的有 CTRL、SHFIT、CAPSLOCK、SPACE、BACKSPACE、ENTER、全部字母和字母上方的数字键，还有一些符号键。
+    * 更新 `void putcharWitchColor(const char c, Byte color)`，现在可以处理退格键和回车键。
+
 ## [63482f2](https://github.com/ADD-SP/MiniOS/commit/63482f21748e62849cb79c0b3003526d10a017b0)
 
 * 时间：2020-11-15
