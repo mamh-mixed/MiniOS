@@ -3,23 +3,23 @@
 void panic_spin(const char *filename, int line, const char *func, const char *condition)
 {
     interruptDisable();
-    puts("\n\n\n!!! error !!! \n");
+    putsNoSync("\n\n\n!!! error !!! \n");
 
-    puts("filename: ");
-    puts(filename);
-    puts("\n");
+    putsNoSync("filename: ");
+    putsNoSync(filename);
+    putsNoSync("\n");
 
-    puts("line: ");
-    putDec(line);
-    puts("\n");
+    putsNoSync("line: ");
+    putDecNoSync(line);
+    putsNoSync("\n");
 
-    puts("function: ");
-    puts(func);
-    puts("\n");
+    putsNoSync("function: ");
+    putsNoSync(func);
+    putsNoSync("\n");
 
-    puts("condition: ");
-    puts(condition);
-    puts("\n");
+    putsNoSync("condition: ");
+    putsNoSync(condition);
+    putsNoSync("\n");
 
     while (1)
     {

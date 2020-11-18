@@ -1,12 +1,15 @@
-#ifndef STDIO_H
+#ifndef __STDIO_H__
 
-#define STDIO_H
+#define __STDIO_H__
 
 #include <stddef.h>
+#include <type.h>
 #include <stdlib.h>
 #include <string.h>
 #include <debug.h>
 #include <sync.h>
+#include <queue.h>
+
 
 #define RGB_BALCK 0
 #define RGB_BULE 1
@@ -31,7 +34,7 @@ extern unsigned int _asm_get_cursor();
 // 设置光标的位置
 extern void _asm_set_cursor(Uint16 pos);
 
-void initStdout();
+void initStdioManagement();
 
 void putchar(const char c);
 

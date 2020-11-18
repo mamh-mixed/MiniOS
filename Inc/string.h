@@ -1,8 +1,9 @@
-#ifndef STRING_H
+#ifndef __STRING_H__
 
-#define STRING_h
+#define __STRING_H__ 0
 
 #include <stddef.h>
+#include <type.h>
 #include <debug.h>
 
 void *memcpy(void *destin, const void *source, unsigned n);

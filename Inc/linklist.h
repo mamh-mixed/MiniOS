@@ -1,8 +1,9 @@
-#ifndef LINK_LIST_H
+#ifndef __LINK_LIST_H__
 
-#define LINK_LIST_H 0
+#define __LINK_LIST_H__ 0
 
 #include <stddef.h>
+#include <type.h>
 #include <stdlib.h>
 #include <string.h>
 #include <memory.h>
@@ -17,29 +18,6 @@
 #define elem2entry(struct_type, struct_member_name, elem_ptr) \
     (struct_type *)((int)elem_ptr - offset(struct_type, struct_member_name))
 
-/**
- * 链表节点.
- */
-typedef struct _linkListItem
-{
-    void *data;
-    struct _linkListItem *next;
-    struct _linkListItem *prev;
-} LinkListItem;
-
-/**
- * 链表结构.
- */
-typedef struct
-{
-    LinkListItem head;
-    LinkListItem tail;
-} LinkList;
-
-/**
- * 用于链表遍历的回调函数.
- */
-typedef int(function)(LinkListItem *, int arg);
 
 void linkListInit(LinkList *list);
 void linkListInsertBefore(LinkListItem *before, LinkListItem *elem);

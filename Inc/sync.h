@@ -1,15 +1,13 @@
-#ifndef SYNC_H
+#ifndef __SYNC_H__
 
-#define SYNC_H 0
+#define __SYNC_H__ 0
 
 #include <stddef.h>
+#include <type.h>
 #include <debug.h>
 #include <interrupt.h>
 
-typedef struct
-{
-    Int32 value;
-} Semaphore;
+
 
 void semaphoreInit(Semaphore *semaphore, Int32 value);
 

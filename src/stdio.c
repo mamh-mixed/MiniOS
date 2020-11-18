@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-Semaphore stdoutSemaphore;
+static Semaphore stdoutSemaphore;
 
-void initStdout()
+void initStdioManagement()
 {
     _asm_set_cursor(0);
     semaphoreInit(&stdoutSemaphore, 1);
@@ -25,7 +25,6 @@ void putcharWitchColor(const char c, Byte color)
         cursor = (lineNum + 1) * 80;
         if (cursor + 1 >= 2000)
         {
-            pVgaMem[cursor * 2 + 1] = color;
             memcpy(pVgaMem, pVgaMem + 80 * 2 * 1, 80 * 2 * 24);
             for (int i = 0; i < 80; i++)
             {
@@ -37,7 +36,13 @@ void putcharWitchColor(const char c, Byte color)
     }
     else if (c == 0x0d)
     {
-        cursor = lineNum * 80;
+        cursor = (lineNum + 1) * 80;
+    }
+    else if (c == 0x08)
+    {
+        cursor = cursor == 0 ? 0 : (cursor - 1);
+        pVgaMem[cursor * 2] = ' ';
+        pVgaMem[cursor * 2 + 1] = 0x07; 
     }
     else if (cursor + 1 >= 2000)
     {

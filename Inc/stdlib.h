@@ -1,8 +1,9 @@
-#ifndef STDLIB_H
+#ifndef __STDLIB_H__
 
-#define STDLIB_H
+#define __STDLIB_H__
 
 #include <stddef.h>
+#include <type.h>
 #include <debug.h>
 
 int atoi(const char *str);

@@ -1,6 +1,6 @@
-#ifndef STDDEF_H
+#ifndef __STDDEF_H__
 
-#define STDDEF_H
+#define __STDDEF_H__
 
 #define NULL ((void *)0)
 

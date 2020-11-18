@@ -12,18 +12,19 @@ void semaphoreGet(Semaphore *semaphore)
     ASSERT(semaphore != NULL);
     InterruptStatus oldStatus = interruptDisable();
     Int32 value = semaphore->value;
-    oldStatus = interruptSetStatus(oldStatus);
+    interruptSetStatus(oldStatus);
 
     while (value <= 0)
     {
         oldStatus = interruptDisable();
         value = semaphore->value;
-        oldStatus = interruptSetStatus(oldStatus);
+        interruptSetStatus(oldStatus);
+        asm volatile("int $0x20");
     }
 
     oldStatus = interruptDisable();
     (semaphore->value)--;
-    oldStatus = interruptSetStatus(oldStatus);
+    interruptSetStatus(oldStatus);
 }
 
 void semaphoreRelease(Semaphore *semaphore)
@@ -31,5 +32,5 @@ void semaphoreRelease(Semaphore *semaphore)
     ASSERT(semaphore != NULL);
     InterruptStatus oldStatus = interruptDisable();
     (semaphore->value)++;
-    oldStatus = interruptSetStatus(oldStatus);
+    interruptSetStatus(oldStatus);
 }

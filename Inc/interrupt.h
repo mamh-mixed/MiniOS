@@ -1,12 +1,14 @@
-#ifndef INTERRUPT_H
+#ifndef __INTERRUPT_H__
 
-#define INTERRUPT_H 0
+#define __INTERRUPT_H__ 0
 
 #include <stddef.h>
+#include <type.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <debug.h>
+#include <keyboard.h>
 
 #define EFLAGS_IF 0x00000200 // eflags 寄存器中的 if 位
 #define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0" \
@@ -14,39 +16,6 @@
 #define INTERRULT_GATE_DESCRIPTOR__ATTRVUTE_DPL_0 0X8e
 #define INTERRULT_GATE_DESCRIPTOR_ATTRVUTE_DPL_3 0XEe
 
-typedef enum
-{
-    INTERRUPT_OFF,
-    INTERRUPT_ON
-} InterruptStatus;
-
-typedef void *InterruptGateEntry;
-
-#pragma pack(1)
-typedef struct
-{
-    Uint16 entryLow16;
-    Uint16 entrySelector;
-    Uint8 dcount;
-
-    Uint8 attribute;
-    Uint16 entryHight16;
-
-} InterruptGateDescriptor;
-
-typedef struct
-{
-    Uint16 limit;
-    void* baseAddr;
-} IDTR;
-
-typedef struct
-{
-    Uint8 code[200];
-    InterruptGateEntry *entry;
-} InterruptGateEntryTable;
-
-#pragma pack()
 
 extern void _asm_setup_idt();
 

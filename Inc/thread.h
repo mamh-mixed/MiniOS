@@ -1,8 +1,9 @@
-#ifndef THEAD_H
+#ifndef __THEAD_H__
 
-#define THEAD_H 0
+#define __THEAD_H__ 0
 
 #include <stddef.h>
+#include <type.h>
 #include <stdlib.h>
 #include <string.h>
 #include <memory.h>

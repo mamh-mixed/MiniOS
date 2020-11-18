@@ -40,12 +40,14 @@ kernel : src/kernel.c Makefile
 	$(call gcc,0,obj/linklist.o,src/linklist.c)
 	$(call gcc,0,obj/c_thread.o,src/thread.c)
 	$(call gcc,0,obj/sync.o,src/sync.c)
+	$(call gcc,0,obj/queue.o,src/queue.c)
+	$(call gcc,0,obj/keyboard.o,src/keyboard.c)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_interrupt.o,src/interrupt.asm)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_thread.o,src/thread.asm)
 	$(call ld,main,0x80100000,bin/kernel.bin,\
 	obj/asm_util.o obj/c_util.o obj/string.o obj/stdlib.o obj/asm_interrupt.o \
 	obj/c_interrupt.o obj/debug.o obj/stdio.o obj/memory.o obj/bitmap.o obj/linklist.o \
-	obj/asm_thread.o obj/c_thread.o obj/sync.o obj/kernel.o)
+	obj/asm_thread.o obj/c_thread.o obj/sync.o obj/queue.o obj/keyboard.o obj/kernel.o)
 
 loader : src/loader.asm inc/const.asm Makefile
 	$(call nasm,$(NASM_FORMAT_BIN),bin/loader.bin,src/loader.asm)

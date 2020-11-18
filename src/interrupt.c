@@ -2,9 +2,9 @@
 
 extern InterruptGateEntryTable _asm_intr_entry_table[48];
 
-IDTR pIdt;
+static IDTR pIdt;
 
-InterruptGateDescriptor idt[0x78];
+static InterruptGateDescriptor idt[0x78];
 
 void initIDT()
 {
@@ -28,14 +28,13 @@ void initIDT()
 
 void setupIDT()
 {
-    pIdt.baseAddr = idt; // 获取 IDT 基址
+    pIdt.baseAddr = idt;       // 获取 IDT 基址
     pIdt.limit = 0x78 * 8 - 1; // 计算 IDT 界限，一共有 0x78 个索引，但并不是全部有效，有效的只有 0x00 ~ 0x27 和 0x70 ~ 0x77。
     asm volatile(
         "lidt (%%eax)"
         :
         : "a"(&pIdt)
-        :"memory"
-    );
+        : "memory");
 }
 
 void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptGateEntry entry, Uint8 attribute)
@@ -54,9 +53,21 @@ void interruptDispatcher(Uint32 vector, Uint32 errorCode)
     char str[50];
     if (vector >= 0 && vector <= 0x13)
     {
-        puts(itoa(vector, str, 16));
+        putUHex(vector);
         puts("\n");
         asm volatile("hlt;");
+    }
+    else if (vector == 0x21)
+    {
+        Uint32 scanCode;
+        asm volatile(
+            "in $0x60,%%al; \
+             xor %%ebx,%%ebx; \
+             mov %%al,%%bl;"
+            : "=b"(scanCode)
+            :
+            : "eax");
+        keyboardDriver(scanCode);
     }
 }
 
@@ -69,7 +80,7 @@ InterruptStatus interruptGetStatus()
 
 InterruptStatus interruptSetStatus(InterruptStatus status)
 {
-    return status & INTERRUPT_ON ? interruptEnable() : interruptDisable();
+    return status == INTERRUPT_ON ? interruptEnable() : interruptDisable();
 }
 
 InterruptStatus interruptEnable()
@@ -82,7 +93,8 @@ InterruptStatus interruptEnable()
     }
 
     oldStatus = INTERRUPT_OFF;
-    asm volatile("sti");
+    asm volatile("sti" ::
+                     : "memory");
     return oldStatus;
 }
 
@@ -96,9 +108,7 @@ InterruptStatus interruptDisable()
     }
 
     oldStatus = INTERRUPT_ON;
-    asm volatile("cli"
-                 :
-                 :
-                 : "memory");
+    asm volatile("cli" ::
+                     : "memory");
     return oldStatus;
 }

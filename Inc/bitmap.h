@@ -1,17 +1,12 @@
-#ifndef BITMAP_H
+#ifndef __BITMAP_H__
 
-#define BITMAP_H 0
+#define __BITMAP_H__ 0
 
 #include <stddef.h>
+#include <type.h>
 #include <stdlib.h>
 #include <string.h>
 #include <debug.h>
-
-typedef struct
-{
-    Byte *bits;
-    Uint32 byteLength;
-} BitMap;
 
 
 void bitMapInit(BitMap *bitMap, Byte *bits, Uint32 byteLength);

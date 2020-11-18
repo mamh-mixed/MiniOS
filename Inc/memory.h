@@ -1,7 +1,8 @@
-#ifndef MEMORY_H
+#ifndef __MEMORY_H__
 
-#define MEMORY_H
+#define __MEMORY_H__ 0
 
+#include <type.h>
 #include <bitmap.h>
 
 #define PAGE_DIR_BASE_ADDR ((Uint32 *)0xfffff000)
@@ -14,14 +15,8 @@
 
 #define START_PADDR ((void *)(0x10000000))
 
-typedef struct
-{
-    BitMap bitMap;
-    Uint32 startAddr;
-    Uint32 unitCount;
-    Uint32 byteSize;
-    Uint32 allocUnit;
-} MemoryPool;
+
+
 
 void initMemoryManagement();
 

@@ -79,7 +79,75 @@ VECTOR 0x1c,ZERO
 VECTOR 0x1d,ZERO
 VECTOR 0x1e,ZERO
 VECTOR 0x1f,ZERO
-VECTOR 0x20,ZERO
+; VECTOR 0x20,ZERO
+
+section .text
+
+    
+    extern getNextEsp0
+    extern setCurEsp0
+    extern goNextTcb
+    global _asm_int0x20_entry:
+
+    _asm_int0x20_entry:
+            
+        pushad
+        push dword 0x00 ; 压入无用数据用来维持栈平衡
+        push dword 0x20 ; 压入中断向量号
+        call interruptDispatcher
+        add esp,8
+        popad
+
+
+        push ds
+        push es
+        push fs
+        push gs
+        pushad
+
+        mov [pesp],esp ; 提前保存当前的栈顶指针，这个栈顶指针将用来恢复上下文。
+        pushad
+        push dword [pesp]
+        call setCurEsp0
+        add esp,4
+        popad
+
+
+        pushad
+        call getNextEsp0
+        mov [pesp],eax
+        popad
+
+        mov esp,[pesp]
+        popad
+        pop gs
+        pop fs
+        pop es
+        pop ds
+
+        pushad
+        call goNextTcb
+        popad
+
+        push eax
+
+        mov al,0x20 ; 中断结束命令EOI
+        out 0xa0,al ; 向8259A从片发送
+        out 0x20,al ; 向8259A主片发送
+
+        pop eax
+
+        iret
+
+        
+
+        pesp dd 0
+
+    times 200-($-_asm_int0x20_entry) db 0
+
+; section .data align=1
+    dd _asm_int0x20_entry
+
 VECTOR 0x21,ZERO
 VECTOR 0x22,ZERO
 VECTOR 0x23,ZERO
@@ -92,65 +160,50 @@ VECTOR 0x27,ZERO
 section .text
 
     
-    extern getNextEsp0
-    extern setCurEsp0
-    extern goNextTcb
+    ; extern getNextEsp0
+    ; extern setCurEsp0
+    ; extern goNextTcb
     global _asm_int0x70_entry:
 
     _asm_int0x70_entry:
             
-        push eax
-        push ecx
-        push edx
-        push dword 0x00 ; 压入无用数据用来维持栈平衡
-        push dword 0x70 ; 压入中断向量号
-        call interruptDispatcher
-        add esp,8
-        pop edx
-        pop ecx
-        pop eax
+        ; pushad
+        ; push dword 0x00 ; 压入无用数据用来维持栈平衡
+        ; push dword 0x70 ; 压入中断向量号
+        ; call interruptDispatcher
+        ; add esp,8
+        ; popad
 
 
-        push ds
-        push es
-        push fs
-        push gs
-        pushad
+        ; push ds
+        ; push es
+        ; push fs
+        ; push gs
+        ; pushad
 
-        mov [pesp],esp ; 提前保存当前的栈顶指针，这个栈顶指针将用来恢复上下文。
-        push eax
-        push ecx
-        push edx
-        push dword [pesp]
-        call setCurEsp0
-        add esp,4
-        pop edx
-        pop ecx
-        pop eax
+        ; mov [pesp],esp ; 提前保存当前的栈顶指针，这个栈顶指针将用来恢复上下文。
+        ; pushad
+        ; push dword [pesp]
+        ; call setCurEsp0
+        ; add esp,4
+        ; popad
 
-        push eax
-        push ecx
-        push edx
-        call getNextEsp0
-        mov [pesp],eax
-        pop edx
-        pop ecx
-        pop eax
 
-        mov esp,[pesp]
-        popad
-        pop gs
-        pop fs
-        pop es
-        pop ds
+        ; pushad
+        ; call getNextEsp0
+        ; mov [pesp],eax
+        ; popad
 
-        push eax
-        push ecx
-        push edx
-        call goNextTcb
-        pop edx
-        pop ecx
-        pop eax
+        ; mov esp,[pesp]
+        ; popad
+        ; pop gs
+        ; pop fs
+        ; pop es
+        ; pop ds
+
+        ; pushad
+        ; call goNextTcb
+        ; popad
 
         push eax
 
@@ -168,7 +221,7 @@ section .text
 
         
 
-        pesp dd 0
+        ; pesp dd 0
 
     times 200-($-_asm_int0x70_entry) db 0
 

@@ -1,10 +1,9 @@
-#ifndef KERNEL_DEBUG_H
+#ifndef __DEBUG_H__
 
-#define KERNEL_DEBUG_H 0
+#define __DEBUG_H__ 0
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
+#include <type.h>
 #include <interrupt.h>
 
 #define PANIC(...) panic_spin (__FILE__, __LINE__, __func__, __VA_ARGS__)
