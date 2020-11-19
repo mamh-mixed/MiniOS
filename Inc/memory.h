@@ -7,16 +7,13 @@
 
 #define PAGE_DIR_BASE_ADDR ((Uint32 *)0xfffff000)
 
-#define KERNEL_VADDR_BYTE_LENGTH (32 * 1024 * 1024 / 8)
+#define KERNEL_VADDR_BYTE_LENGTH ((0xffffffff - 0x90000000) / 4096 / 8)
 
 #define PADDR_BYTE_LENGTH (0xf0000000 / 4096 / 8)
 
 #define KERNEL_START_VADDR (0x82000000)
 
 #define START_PADDR ((void *)(0x10000000))
-
-
-
 
 void initMemoryManagement();
 
@@ -30,7 +27,9 @@ Bool isPageDescriptorPresent(Uint32 descriptor);
 
 Uint32 makePageDescriptor(void *physicalAddr, Uint32 present, Uint32 rw, Uint32 us, Uint32 pwt, Uint32 pcd, Uint32 gloabl);
 
-void installA4KBPage(Uint32 linearAddr);
+void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 us);
+
+Uint32 initAUserPageDir();
 
 void *sysMalloc(Uint32 byteLength);
 

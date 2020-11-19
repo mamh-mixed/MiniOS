@@ -19,7 +19,7 @@ void semaphoreGet(Semaphore *semaphore)
         oldStatus = interruptDisable();
         value = semaphore->value;
         interruptSetStatus(oldStatus);
-        asm volatile("int $0x20");
+        asm volatile("int $0x20;":::);
     }
 
     oldStatus = interruptDisable();

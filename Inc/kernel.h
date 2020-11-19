@@ -13,5 +13,7 @@
 #include <thread.h>
 #include <sync.h>
 #include <keyboard.h>
+#include <gdt.h>
+#include <sched.h>
 
 #endif

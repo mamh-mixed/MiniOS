@@ -9,6 +9,8 @@
 #include <string.h>
 #include <debug.h>
 #include <keyboard.h>
+#include <linklist.h>
+#include <gdt.h>
 
 #define EFLAGS_IF 0x00000200 // eflags 寄存器中的 if 位
 #define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0" \
@@ -20,6 +22,8 @@
 extern void _asm_setup_idt();
 
 extern void _asm_init_8259a();
+
+void initInterruptManagement();
 
 void initIDT();
 

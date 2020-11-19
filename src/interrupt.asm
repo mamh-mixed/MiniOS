@@ -19,14 +19,13 @@ _asm_intr_entry_table:
 %macro VECTOR 2
     section .text
         ; 导出中断入口标签
-        global _asm_int%1_entry:
+        global _asm_int%1_entry
 
         ; %1 为宏的第一个参数，表示中断向量号，此处用来形成代表中断入口的标签。
         _asm_int%1_entry:
-            
-            push eax
 
-            
+            mov [_asm_int%1_eax_bak],eax
+                        
             %2 ; %2 为宏的第二个参数，如果此中断会压入错误代码则为 nop，反之则压入 0 用来维持栈平衡。
             push dword %1 ; 压入中断向量号
             call interruptDispatcher ; 调用中断调度器实现真正的功能
@@ -36,9 +35,11 @@ _asm_intr_entry_table:
             out 0xa0,al ;向8259A从片发送
             out 0x20,al ;向8259A主片发送
 
-            pop eax
+            mov eax,[_asm_int%1_eax_bak]
 
             iret
+
+        _asm_int%1_eax_bak dd 0
         times 200-($-_asm_int%1_entry) db 0
 ; section .data align=1
     dd _asm_int%1_entry
@@ -84,9 +85,12 @@ VECTOR 0x1f,ZERO
 section .text
 
     
+    extern isProcessChange
+    extern sched
     extern getNextEsp0
-    extern setCurEsp0
-    extern goNextTcb
+    extern getNextCr3
+    extern saveCurEsp0
+    extern switchToNext
     global _asm_int0x20_entry:
 
     _asm_int0x20_entry:
@@ -98,50 +102,47 @@ section .text
         add esp,8
         popad
 
-
         push ds
         push es
         push fs
         push gs
         pushad
-
-        mov [pesp],esp ; 提前保存当前的栈顶指针，这个栈顶指针将用来恢复上下文。
-        pushad
-        push dword [pesp]
-        call setCurEsp0
+        
+        mov eax,esp
+        push eax
+        call saveCurEsp0
         add esp,4
-        popad
 
+        call sched
+        call isProcessChange
+
+        cmp eax,0x00
+        je .b1
+        .b0:
+            ; 涉及到进程切换
+            call getNextCr3
+            mov cr3,eax
+        .b1:
+            call getNextEsp0
+            mov esp,eax
+
+            popad
+            pop gs
+            pop fs
+            pop es
+            pop ds
 
         pushad
-        call getNextEsp0
-        mov [pesp],eax
-        popad
-
-        mov esp,[pesp]
-        popad
-        pop gs
-        pop fs
-        pop es
-        pop ds
-
-        pushad
-        call goNextTcb
+        call switchToNext
         popad
 
         push eax
-
         mov al,0x20 ; 中断结束命令EOI
         out 0xa0,al ; 向8259A从片发送
         out 0x20,al ; 向8259A主片发送
-
         pop eax
 
         iret
-
-        
-
-        pesp dd 0
 
     times 200-($-_asm_int0x20_entry) db 0
 
@@ -159,51 +160,9 @@ VECTOR 0x27,ZERO
 
 section .text
 
-    
-    ; extern getNextEsp0
-    ; extern setCurEsp0
-    ; extern goNextTcb
     global _asm_int0x70_entry:
 
     _asm_int0x70_entry:
-            
-        ; pushad
-        ; push dword 0x00 ; 压入无用数据用来维持栈平衡
-        ; push dword 0x70 ; 压入中断向量号
-        ; call interruptDispatcher
-        ; add esp,8
-        ; popad
-
-
-        ; push ds
-        ; push es
-        ; push fs
-        ; push gs
-        ; pushad
-
-        ; mov [pesp],esp ; 提前保存当前的栈顶指针，这个栈顶指针将用来恢复上下文。
-        ; pushad
-        ; push dword [pesp]
-        ; call setCurEsp0
-        ; add esp,4
-        ; popad
-
-
-        ; pushad
-        ; call getNextEsp0
-        ; mov [pesp],eax
-        ; popad
-
-        ; mov esp,[pesp]
-        ; popad
-        ; pop gs
-        ; pop fs
-        ; pop es
-        ; pop ds
-
-        ; pushad
-        ; call goNextTcb
-        ; popad
 
         push eax
 

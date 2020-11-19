@@ -8,42 +8,16 @@
 #include <string.h>
 #include <memory.h>
 #include <debug.h>
+#include <gdt.h>
 #include <interrupt.h>
 
-typedef void(ThreadFunc)();
+Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, ThreadFunc func, void *args);
 
-typedef struct 
-{
-    Uint32 id;
-    const char* name;
-    void* args;
-    Uint32 eip;
-    Uint32 ss0;
-    Uint32 esp0;
-    Uint32 ss3;
-    Uint32 esp3;
-    Uint32 cs;
-    Uint32 ds;
-    Uint32 fs;
-    Uint32 es;
-    Uint32 gs;
-} Tcb;
+extern Uint32 _asm_create_thread_dpl0(Uint32 cs, Uint32 ds, Uint32 es, Uint32 fs, Uint32 gs, Uint32 esp0, Uint32 eip);
 
-Tcb *curTcb;
+extern Uint32 _asm_create_thread_dpl3(Uint32 cs, Uint32 ss3, Uint32 ds, Uint32 es, Uint32 fs, Uint32 gs, Uint32 esp0, Uint32 esp3, Uint32 eip);
 
-Tcb *nextTcb;
-
-Tcb* createThread(Uint32 id, const char* name, ThreadFunc func, void* args);
-
-extern Uint32 _asm_start_thread(Uint32 cs, Uint32 ds, Uint32 es, Uint32 fs, Uint32 gs, Uint32 esp0, Uint32 eip);
-
-void startThread(Tcb* tcb);
-
-Uint32 getNextEsp0();
-
-void setCurEsp0();
-
-void goNextTcb();
+void startThread(Tcb *tcb);
 
 void _asm_test();
 

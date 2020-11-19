@@ -1,5 +1,6 @@
 NASM_FORMAT_BIN=bin
 NASM_FORMAT_ELF=elf
+OPTIMIZERS_LEVEL=0
 
 define clean
 	@rm -rf bin/*.bin obj/*.o
@@ -29,25 +30,29 @@ clean : Makefile
 
 kernel : src/kernel.c Makefile
 	@make util
-	$(call gcc,0,obj/kernel.o,src/kernel.c)
-	$(call gcc,0,obj/string.o,src/string.c)
-	$(call gcc,0,obj/stdlib.o,src/stdlib.c)
-	$(call gcc,0,obj/stdio.o,src/stdio.c)
-	$(call gcc,0,obj/c_interrupt.o,src/interrupt.c)
-	$(call gcc,0,obj/bitmap.o,src/bitmap.c)
-	$(call gcc,0,obj/memory.o,src/memory.c)
-	$(call gcc,0,obj/debug.o,src/debug.c)
-	$(call gcc,0,obj/linklist.o,src/linklist.c)
-	$(call gcc,0,obj/c_thread.o,src/thread.c)
-	$(call gcc,0,obj/sync.o,src/sync.c)
-	$(call gcc,0,obj/queue.o,src/queue.c)
-	$(call gcc,0,obj/keyboard.o,src/keyboard.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/kernel.o,src/kernel.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/string.o,src/string.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/stdlib.o,src/stdlib.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/stdio.o,src/stdio.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/c_interrupt.o,src/interrupt.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/bitmap.o,src/bitmap.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/memory.o,src/memory.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/debug.o,src/debug.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/linklist.o,src/linklist.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/c_thread.o,src/thread.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/sync.o,src/sync.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/queue.o,src/queue.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/keyboard.o,src/keyboard.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/gdt.o,src/gdt.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/process.o,src/process.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/sched.o,src/sched.c)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_interrupt.o,src/interrupt.asm)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_thread.o,src/thread.asm)
 	$(call ld,main,0x80100000,bin/kernel.bin,\
 	obj/asm_util.o obj/c_util.o obj/string.o obj/stdlib.o obj/asm_interrupt.o \
 	obj/c_interrupt.o obj/debug.o obj/stdio.o obj/memory.o obj/bitmap.o obj/linklist.o \
-	obj/asm_thread.o obj/c_thread.o obj/sync.o obj/queue.o obj/keyboard.o obj/kernel.o)
+	obj/asm_thread.o obj/c_thread.o obj/sync.o obj/queue.o obj/keyboard.o \
+	obj/gdt.o obj/process.o obj/sched.o obj/kernel.o)
 
 loader : src/loader.asm inc/const.asm Makefile
 	$(call nasm,$(NASM_FORMAT_BIN),bin/loader.bin,src/loader.asm)

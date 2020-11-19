@@ -76,22 +76,27 @@ Uint32 makePageDescriptor(void* physicalAddr, Uint32 present, Uint32 readWrite, 
     return descriptor;
 }
 
-void installA4KBPage(Uint32 linearAddr)
+void installA4KBPage(void* destPageDirPhyAddr ,Uint32 linearAddr, Uint32 us)
 {
     ASSERT(linearAddr != 0);
     Uint32 *pageDir = PAGE_DIR_BASE_ADDR;
+
+    Uint32 tempDescriptor = makePageDescriptor(destPageDirPhyAddr, 1, 1, us, 0, 0, 0);
+    pageDir[1022] = tempDescriptor;
+
+    Uint32 *destPageDir = (Uint32*)0xffffe000;
     Uint32 pageDirIndex = linearAddr >> 22; // 线性地址的高 10 位就是页目录的索引
     Bool needClear = FALSE;
-    if (!isPageDescriptorPresent(pageDir[pageDirIndex]))
+    if (!isPageDescriptorPresent(destPageDir[pageDirIndex]))
     {
         needClear = TRUE;
         Uint32 *descriptorAddr = phyMalloc4KB();
         ASSERT(descriptorAddr != NULL);
-        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, 0, 0, 0, 0);
-        pageDir[pageDirIndex] = descriptor;
+        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0);
+        destPageDir[pageDirIndex] = descriptor;
     }
 
-    Uint32 *pageTable = (Uint32*)(0xffc00000 | (pageDirIndex << 12));
+    Uint32 *pageTable = (Uint32*)(0xff800000 | (pageDirIndex << 12));
     Uint32 pageTableIndex = (linearAddr & 0x003ff000) >> 12;
     if (needClear)
     {
@@ -101,15 +106,39 @@ void installA4KBPage(Uint32 linearAddr)
     {
         Uint32 *descriptorAddr = phyMalloc4KB();
         ASSERT(descriptorAddr != NULL);
-        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, 0, 0, 0, 0);
+        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0);
         pageTable[pageTableIndex] = descriptor;
     }
+
+    pageDir[1022] = 0;
+    memset((void *)linearAddr, 0, 0x1000);
+}
+
+Uint32 initAUserPageDir()
+{
+    void *phyAddr = phyMalloc4KB(); // 申请一个物理页
+    ASSERT(phyAddr != NULL);
+    Uint32 *pageDir = PAGE_DIR_BASE_ADDR; // 页目录基址
+    Uint32 descriptor = makePageDescriptor(phyAddr, 1, 1, 0, 0, 0, 0); // 页目录内容依然敏感，所以仅 ring0 能访问。
+    pageDir[1022] = descriptor; // 借用页目录的倒数第二项，用来初始化新的页目录。
+    
+    Uint32 *newPageDir = (Uint32 *)0xffffe000; // 此地址指向新的页目录基址
+    newPageDir[1023] = descriptor;
+
+    // 拷贝高 2GB 的页目录到新的页目录中，但是不拷贝最后两项，因为其有特殊用途，通过最后两项可以修改页目录和创建新的页目录。
+    for (int i = 512; i < 1023; i++)
+    {
+        newPageDir[i] = pageDir[i];
+    }
+    pageDir[1022] = 0;
+    return (Uint32)phyAddr;
 }
 
 void *sysMalloc(Uint32 byteLength)
 {
     void* startAddr = memoryPoolAlloc(&kernelVaddrPool, byteLength);
     ASSERT(startAddr != NULL);
+    memset(startAddr, 0, byteLength);
     return startAddr;
 }
 

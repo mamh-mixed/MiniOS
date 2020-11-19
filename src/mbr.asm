@@ -141,7 +141,10 @@ section mbr vstart=0x7c00
 		sgdt [pgdt]  ; 取出 GDTR 
 		mov eax,[pgdt+2]  ; 取出 GDT 基址
 		or eax,0x8000_0000  ; 修改为线性地址
+		mov [pgdt+2],eax
 		lgdt [pgdt]  ; 写回 GDTR
+
+		or esp,0x8000_0000 ; 栈顶指针也要改为线性地址
 
 		mov eax,cosnt_num_disk_sector_loader
 		mov esi,const_vaddr_loader_entry

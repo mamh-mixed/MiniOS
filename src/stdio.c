@@ -17,7 +17,7 @@ void putchar(const char c)
 void putcharWitchColor(const char c, Byte color)
 {
     // 显存首地址
-    unsigned char *pVgaMem = (unsigned char *)0x000b8000;
+    unsigned char *pVgaMem = (unsigned char *)0x800b8000;
     Uint32 cursor = _asm_get_cursor();
     Uint32 lineNum = cursor / 80;
     if (c == '\n')

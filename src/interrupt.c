@@ -6,6 +6,13 @@ static IDTR pIdt;
 
 static InterruptGateDescriptor idt[0x78];
 
+void initInterruptManagement()
+{
+    _asm_init_8259a();
+    initIDT();
+    setupIDT();
+}
+
 void initIDT()
 {
     // 根据 src/interrupt.asm 的内存布局，中断向量 0x00 ~ 0x27 的入口在 _asm_intr_entry_table[0x0...0x27] 中
@@ -44,18 +51,32 @@ void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptG
     descriptor->entryLow16 = low16;
     descriptor->entryHight16 = high16;
     descriptor->dcount = 0; // 这项永远为 0
-    descriptor->entrySelector = GDT_SELECTOR_DPL_0_4GB_CODE;
+    descriptor->entrySelector = GDT_SELECTOR_4GB_CODE_DPL_0;
     descriptor->attribute = attribute;
 }
 
 void interruptDispatcher(Uint32 vector, Uint32 errorCode)
 {
     char str[50];
-    if (vector >= 0 && vector <= 0x13)
+    if (vector >= 0 && vector <= 0x13 && vector != 0x0e)
     {
         putUHex(vector);
         puts("\n");
         asm volatile("hlt;");
+    }
+    else if (vector == 0x0e)
+    {
+        Uint32 cr3, cr2;
+        asm volatile(
+            "mov %%cr3,%0; \
+             mov %%cr2,%1;"
+            :"=r"(cr3),"=r"(cr2)
+            :
+            :"memory"
+        );
+        Uint32 us = cr2 >= 0x80000000 ? 0 : 1;
+        installA4KBPage((void*)cr3, cr2, us);
+        
     }
     else if (vector == 0x21)
     {

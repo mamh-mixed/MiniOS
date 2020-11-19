@@ -1,136 +1,268 @@
 #include <linklist.h>
 
-/**
- * 链表初始化.
- */ 
-void linkListInit(LinkList* list)
+void _linkListInit(LinkList *list, Bool isSync)
 {
     ASSERT(list != NULL);
-    list->head.prev = NULL;
-    list->head.next = &list->tail;
-    list->tail.next = NULL;
-    list->tail.prev = &list->head;
-}
-
-/**
- * 在before前插入节点elem.
- */ 
-void linkListInsertBefore(LinkListItem* before, LinkListItem* elem) {
-    ASSERT(before != NULL);
-    ASSERT(elem != NULL);
-
-    InterruptStatus oldStatus = interruptDisable();
-
-    before->prev->next = elem;
-    elem->prev = before->prev;
-    elem->next = before;
-
-    before->prev = elem;
-
-    interruptSetStatus(oldStatus);
-}
-
-/**
- * 将给定的元素添加至链表队首.
- */ 
-void linkListPush(LinkList *list, LinkListItem* elem) {
-    ASSERT(list != NULL);
-    ASSERT(elem != NULL);
-    linkListInsertBefore(list->head.next, elem);
-}
-
-/**
- * 将给定的元素添加至链表队尾.
- */ 
-void linkListAppend(LinkList *list, LinkListItem* elem) {
-    ASSERT(list != NULL);
-    ASSERT(elem != NULL);
-    linkListInsertBefore(&list->tail, elem);
-}
-
-/**
- * 将指定的元素从其链表中脱离.
- */ 
-void linkListRemove(LinkListItem* elem) {
-    ASSERT(elem != NULL);
-
-    InterruptStatus oldStatus = interruptDisable();
-
-    elem->prev->next = elem->next;
-    elem->next->prev = elem->prev;
-
-    interruptSetStatus(oldStatus);
-}
-
-/**
- * 弹出第一个元素.
- */ 
-LinkListItem* linkListPop(LinkList* list) {
-    ASSERT(list != NULL);
-
-    LinkListItem* result = list->head.next;
-
-    linkListRemove(result);
-
-    return result;
-}
-
-/**
- * 链表查找.
- */ 
-int linkListFind(LinkList* list, LinkListItem* elem) {
-    ASSERT(list != NULL);
-    ASSERT(elem != NULL);
-
-    LinkListItem* e = list->head.next;
-
-    while (e != &list->tail) {
-        if (e == elem) {
-            return 1;
-        }
-        e = e->next;
+    if (isSync)
+    {
+        semaphoreInit(&list->semaphore, 1);
     }
-    
-    return 0;
+    list->head = NULL;
+    list->tail = NULL;
+    list->cur = NULL;
+    list->length = 0;
 }
 
-int linkListEmpty(LinkList* list) {
+Uint32 _linkListGetLength(LinkList *list, Bool isSync)
+{
     ASSERT(list != NULL);
-    return (list->head.next == &list->tail ? 1 : 0);
-}
-
-Uint32 linkListLength(LinkList* list) {
-    ASSERT(list != NULL);
-
-    LinkListItem* e = list->head.next;
-    Uint32 length = 0;
-
-    while (e != &list->tail) {
-        ++length;
-        e = e->next;
+    if (isSync)
+    {
+        semaphoreGet(&list->semaphore);
     }
-    
+    Uint32 length = list->length;
+    if (isSync)
+    {
+        semaphoreRelease(&list->semaphore);
+    }
     return length;
+    ;
 }
 
-/**
- * 遍历链表，将链表元素和参数arg传给函数func，如果返回1，那么返回当前元素.
- */ 
-LinkListItem* linkListTraversal(LinkList* list, function func, int arg) {
+void _linkListPush(LinkList *list, void *data, Bool isSync)
+{
     ASSERT(list != NULL);
-    ASSERT(func != NULL);
-
-    if (linkListEmpty(list)) {
-        return NULL;
+    LinkListItem *p = (LinkListItem *)sysMalloc(sizeof(LinkListItem));
+    ASSERT(p != NULL);
+    Uint32 length = _linkListGetLength(list, isSync);
+    if (isSync)
+    {
+        semaphoreGet(&list->semaphore);
     }
 
-    LinkListItem* e = list->head.next;
-     while (e != &list->tail) {
-        if (func(e, arg)) {
-            return e;
+    p->data = data;
+    p->next = NULL;
+    if (length != 0)
+    {
+        p->next = list->tail->next;
+        p->prev = list->tail;
+        list->tail->next = p;
+        list->tail = p;
+    }
+    else
+    {
+        list->head = p;
+        list->tail = p;
+    }
+    (list->length)++;
+
+    if (isSync)
+    {
+        semaphoreRelease(&list->semaphore);
+    }
+}
+
+void _linkListPop(LinkList *list, Bool isSync)
+{
+    ASSERT(list != NULL);
+    Uint32 length = _linkListGetLength(list, isSync);
+    if (isSync)
+    {
+        semaphoreGet(&list->semaphore);
+    }
+    if (length != 0)
+    {
+        if (length == 1)
+        {
+            sysFree(list->head);
+            list->head = NULL;
+            list->tail = NULL;
         }
-        e = e->next;
+        else
+        {
+            LinkListItem *temp = list->tail;
+            list->tail = list->tail->prev;
+            list->tail->next = NULL;
+            sysFree(temp);
+        }
+        (list->length)--;
     }
+    if (isSync)
+    {
+        semaphoreRelease(&list->semaphore);
+    }
+}
+
+void _linkListDelete(LinkList *list, LinkListItem *item, Bool isSync)
+{
+    ASSERT(list != NULL);
+    ASSERT(item != NULL);
+    Uint32 length = _linkListGetLength(list, isSync);
+    if (isSync)
+    {
+        semaphoreGet(&list->semaphore);
+    }
+
+    LinkListItem *prev = item->prev, *next = item->next;
+    if (prev != NULL && next == NULL)
+    {
+        list->tail = prev;
+        list->tail->next = NULL;
+    }
+    else if (prev == NULL && next != NULL)
+    {
+        list->head = list->head->next;
+        list->head->prev = NULL;
+    }
+    else if (prev == NULL && next == NULL)
+    {
+        list->head = NULL;
+        list->tail = NULL;
+    }
+    else
+    {
+        prev->next = item->next;
+        next->prev = prev;
+    }
+
+    (list->length)--;
+    sysFree(item);
+
+    if (isSync)
+    {
+        semaphoreRelease(&list->semaphore);
+    }
+}
+
+LinkListItem *_linkListFind(LinkList *list, LinkListScanCallBack callback, void *arg, Bool isSync)
+{
+    LinkListItem *p = list->head;
+    Uint32 length = _linkListGetLength(list, isSync);
 
     return NULL;
+}
+
+LinkListItem *_linkListGetNext(LinkList *list, Bool isSync)
+{
+    if (isSync)
+    {
+        semaphoreGet(&list->semaphore);
+    }
+
+    LinkListItem *ret = NULL;
+
+    if (list->cur == NULL)
+    {
+        list->cur = list->head;
+    }
+    else
+    {
+        list->cur = list->cur->next;
+    }
+    ret = list->cur;
+
+    if (isSync)
+    {
+        semaphoreRelease(&list->semaphore);
+    }
+    return ret;
+}
+
+void _linkListDestroy(LinkList *list, Bool isSync)
+{
+    LinkListItem *p = list->head;
+    while (_linkListGetLength(list, isSync) != 0)
+    {
+        _linkListPop(list, isSync);
+    }
+}
+
+void linkListSyncInit(LinkList *list)
+{
+    _linkListInit(list, TRUE);
+}
+
+Uint32 linkListSyncGetLength(LinkList *list)
+{
+    return _linkListGetLength(list, TRUE);
+}
+
+void linkListSyncPush(LinkList *list, void *data)
+{
+    _linkListPush(list, data, TRUE);
+}
+
+void linkListSyncPop(LinkList *list)
+{
+    _linkListPop(list, TRUE);
+}
+
+void linkListSyncDelete(LinkList *list, LinkListItem *item)
+{
+    _linkListDelete(list, item, TRUE);
+}
+
+LinkListItem *linkListSyncFind(LinkList *list, LinkListScanCallBack callback, void *arg)
+{
+    _linkListFind(list, callback, arg, TRUE);
+}
+
+LinkListItem *linkListSyncGetNext(LinkList *list)
+{
+    _linkListGetNext(list, TRUE);
+}
+
+void linkListSyncDestroy(LinkList *list)
+{
+    LinkListItem *p = list->head;
+    while (_linkListGetLength(list, TRUE) != 0)
+    {
+        _linkListPop(list, TRUE);
+    }
+}
+
+
+
+void linkListNoSyncInit(LinkList *list)
+{
+    _linkListInit(list, FALSE);
+}
+
+Uint32 linkListNoSyncGetLength(LinkList *list)
+{
+    return _linkListGetLength(list, FALSE);
+}
+
+void linkListNoSyncPush(LinkList *list, void *data)
+{
+    _linkListPush(list, data, FALSE);
+}
+
+void linkListNoSyncPop(LinkList *list)
+{
+    _linkListPop(list, FALSE);
+}
+
+void linkListNoSyncDelete(LinkList *list, LinkListItem *item)
+{
+    _linkListDelete(list, item, FALSE);
+}
+
+LinkListItem *linkListNoSyncFind(LinkList *list, LinkListScanCallBack callback, void *arg)
+{
+    _linkListFind(list, callback, arg, FALSE);
+}
+
+LinkListItem *linkListNoSyncGetNext(LinkList *list)
+{
+    _linkListGetNext(list, FALSE);
+}
+
+void linkListNoSyncDestroy(LinkList *list)
+{
+    LinkListItem *p = list->head;
+    while (_linkListGetLength(list, FALSE) != 0)
+    {
+        _linkListPop(list, FALSE);
+    }
 }
