@@ -1,3 +1,13 @@
+## [b4a975b](https://github.com/ADD-SP/MiniOS/commit/b4a975b844a02d391fdb17437a2ef42cc1474a8f)
+
+* 时间：2020-11-19
+* 信息：:triangular_flag_on_post: process is implemented.
+* 变动：
+    * 实现了进程，暂时无法测试能否在 Ring3 下正常工作，但是经一次测试大概在 Ring0 正常。等实现了一些 syscall 之后大概就能在 Ring3 下测试了。
+    * 实现了部分缺页中断的功能，即创建线性地址对应的页目录项、页表项，但未实现页面的换入换出，需要等待实现文件系统。
+    * 修复了 `thread.asm` 中宏的错误，改错误可能会导致中断返回后 eax 寄存器的值丢失。
+
+
 ## [b525d81](https://github.com/ADD-SP/MiniOS/commit/b525d8162332c0b117fbcb52beaefa445a12bf34)
 
 * 时间：2020-11-18
