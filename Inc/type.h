@@ -65,7 +65,7 @@ typedef struct
     Uint32 length;
 } LinkList;
 
-typedef Bool(LinkListScanCallBack)(LinkListItem *, void* arg);
+typedef Bool(LinkListScanCallBack)(LinkListItem *, void *arg);
 
 typedef struct
 {
@@ -192,5 +192,49 @@ typedef struct
     MemoryPool memoryPool;
     LinkList threadList;
 } Pcb;
+
+typedef enum
+{
+    GetPid,
+    Read,
+    Write
+} SysCall;
+
+typedef enum
+{
+    MiniFS
+} FileSystemType;
+
+typedef enum
+{
+    Stdin,
+    Stdout,
+    Gernal,
+    Directory
+} FileType;
+
+#pragma pack(1)
+
+typedef struct
+{
+    char magic[10];
+    FileSystemType fileSystemType;
+    Uint32 fileDescriptorCount;
+    Uint32 fileDescriptorMaxCount;
+    Uint32 fileDescriptorStartSector;
+    Uint32 fileStartSector;
+} FileSystemInfo;
+
+typedef struct
+{
+    FileType fileType;
+    Bool isExists;
+    char filename[256];
+    Uint32 startSector;
+    Uint32 sectorCount;
+    Uint32 byteSize;
+} Fcb;
+
+#pragma pack()
 
 #endif

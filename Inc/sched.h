@@ -16,6 +16,8 @@ void removePcb(Pcb *pcb);
 
 Bool isProcessChange();
 
+Bool isRingChange();
+
 void sched();
 
 Uint32 getNextEsp0();
@@ -24,6 +26,12 @@ Uint32 getNextCr3();
 
 void saveCurEsp0(Uint32 esp0);
 
-void switchToNext();
+void switchToNext(Uint32 esp0);
+
+Pcb *getCurPcb();
+
+Tcb *getCurTcb();
+
+Uint32 getCurRing();
 
 #endif

@@ -15,5 +15,6 @@
 #include <keyboard.h>
 #include <gdt.h>
 #include <sched.h>
+#include <filesys.h>
 
 #endif

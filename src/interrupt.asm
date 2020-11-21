@@ -6,7 +6,7 @@
 ; 有的中断不会压入错误代码，所以压入一个 0 用来维持栈平衡。
 %define ZERO push dword 0
 
-; extern __cdecl interruptDispatcher(Uint32 vevtor, Uint32 errorCode);
+; extern __cdecl interruptDispatcher(Uint32 vevtor, Uint32 extra);
 ; 中断调度器，所有的中断李成均调用此函数以实现真正的功能
 extern interruptDispatcher
 
@@ -23,10 +23,10 @@ _asm_intr_entry_table:
 
         ; %1 为宏的第一个参数，表示中断向量号，此处用来形成代表中断入口的标签。
         _asm_int%1_entry:
-
-            mov [_asm_int%1_eax_bak],eax
-                        
             %2 ; %2 为宏的第二个参数，如果此中断会压入错误代码则为 nop，反之则压入 0 用来维持栈平衡。
+
+            pushad
+            push dword [esp+0x04*8]
             push dword %1 ; 压入中断向量号
             call interruptDispatcher ; 调用中断调度器实现真正的功能
             add esp,8 ; 平衡栈顶
@@ -35,11 +35,11 @@ _asm_intr_entry_table:
             out 0xa0,al ;向8259A从片发送
             out 0x20,al ;向8259A主片发送
 
-            mov eax,[_asm_int%1_eax_bak]
+            popad
+            add esp,4
 
             iret
 
-        _asm_int%1_eax_bak dd 0
         times 200-($-_asm_int%1_entry) db 0
 ; section .data align=1
     dd _asm_int%1_entry
@@ -84,24 +84,26 @@ VECTOR 0x1f,ZERO
 
 section .text
 
-    
+    ; Bool isProcessChange(); 本次上下文切换是否涉及到切换进程
     extern isProcessChange
+    ; Bool isRingChange(); 本次任务切换是否会有特权级变化
+    extern isRingChange
+    ; void sched(); 找出下一个要运行的任务
     extern sched
+    ; Uint32 getNextEsp0(); 获取下一个任务的 esp0
     extern getNextEsp0
+    ; Uint32 getNextCr3(); 获取下一个进程的 cr3
     extern getNextCr3
+    ; void saveCurEsp0(Uint32 esp0); 保存当前任务的 esp0 到 TCB 中
     extern saveCurEsp0
+    ; void switchToNext(Uint32 esp0); 将当前 PCB 和 TCB 设置为即将运行的任务的 PCB 和 TCB，
+    ; 并更新 TCB 和 TSS 的 esp0 字段
     extern switchToNext
     global _asm_int0x20_entry:
 
     _asm_int0x20_entry:
-            
-        pushad
-        push dword 0x00 ; 压入无用数据用来维持栈平衡
-        push dword 0x20 ; 压入中断向量号
-        call interruptDispatcher
-        add esp,8
-        popad
 
+        ; 在当前的内核栈中压入上下文
         push ds
         push es
         push fs
@@ -116,25 +118,41 @@ section .text
         call sched
         call isProcessChange
 
-        cmp eax,0x00
+        cmp eax,0x00 ; 是否涉及到进程切换
         je .b1
         .b0:
             ; 涉及到进程切换
             call getNextCr3
             mov cr3,eax
         .b1:
-            call getNextEsp0
-            mov esp,eax
-
-            popad
-            pop gs
-            pop fs
-            pop es
-            pop ds
-
-        pushad
-        call switchToNext
+        call getNextEsp0
+        mov [.esp_bak],eax
+        call isRingChange
+        cmp eax,0x01 ; 特权级是否发生变化
+        je .b2
+        jmp .b3
+        .b2:
+            ; 特权级发生了变化
+            mov eax,[.esp_bak]
+            add eax,68 ; 计算恢复上下文且中断返回后的内核栈栈顶指针
+            push eax
+            call switchToNext
+            add esp,4
+            jmp .b4
+        .b3:
+            ; 特权级未发生变化
+            mov eax,[.esp_bak]
+            add eax,60 ; 计算恢复上下文且中断返回后的内核栈栈顶指针
+            push eax
+            call switchToNext ; 切换到下一个 TCB 并设置 TSS 中的 esp0 字段
+            add esp,4
+        .b4:
+        mov esp,[.esp_bak]
         popad
+        pop gs
+        pop fs
+        pop es
+        pop ds
 
         push eax
         mov al,0x20 ; 中断结束命令EOI
@@ -143,7 +161,7 @@ section .text
         pop eax
 
         iret
-
+    .esp_bak dd 0
     times 200-($-_asm_int0x20_entry) db 0
 
 ; section .data align=1
@@ -170,9 +188,9 @@ section .text
         out 0xa0,al ; 向8259A从片发送
         out 0x20,al ; 向8259A主片发送
 
-        mov al,0x0c ; 寄存器C的索引。且开放NMI
-        out 0x70,al
-        in al,0x71 ; 读一下RTC的寄存器C，否则只发生一次中断。此处不考虑闹钟和周期性中断的情况。
+        ; mov al,0x0c ; 寄存器C的索引。且开放NMI
+        ; out 0x70,al
+        ; in al,0x71 ; 读一下RTC的寄存器C，否则只发生一次中断。此处不考虑闹钟和周期性中断的情况。
 
         pop eax
 
@@ -194,6 +212,70 @@ VECTOR 0x74,ZERO
 VECTOR 0x75,ZERO
 VECTOR 0x76,ZERO
 VECTOR 0x77,ZERO
+
+section .text
+
+    extern getCurRing
+    ; Uint32 getCurRing();
+    extern syscallDispatcher
+    ; Uint32 syscallDispatcher(SysCall syscall, Uint32 argc, Uint32 *esp0);
+    global _asm_int0x80_entry:
+
+    _asm_int0x80_entry:
+
+        push ebp
+        mov ebp,esp
+        push ebx
+        push ecx
+        push edx
+        push esi
+        push edi
+
+        mov ebx,[ebp+0x04*3] ; 获取用户栈栈顶指针
+        xor esi,esi ; 系统调用参数下标，从右到左。
+        xor edi,edi
+
+        cmp ecx,0
+        jz .b1
+        ; 压入所有参数
+        .b0:
+            mov edi,esi
+            shl edi,2
+            add edi,ebx
+            push dword [edi]
+            loop .b0
+        
+        .b1:
+        mov ecx,esi ; 循环完毕后 esi 就是参数的数量
+        mov [_asm_int0x80_ecx_bak],ecx
+        mov ebx,esp
+        push ebx ; 压入内核栈顶指针
+        push ecx ; 压入参数数量
+        push eax ; 压入系统调用号
+        call syscallDispatcher
+        add esp,12
+        
+        cmp ecx,0
+        jz .b3
+        mov ecx,[_asm_int0x80_ecx_bak]
+        .b2:
+            add esp,4
+            loop .b2
+        
+        .b3:
+        pop edi
+        pop esi
+        pop edx
+        pop ecx
+        pop ebx
+        pop ebp
+
+        iret
+
+    _asm_int0x80_ecx_bak dd 0
+
+    times 200-($-_asm_int0x80_entry) db 0
+    dd _asm_int0x80_entry
 
 
 

@@ -14,8 +14,12 @@ int memcmp(const void *a, const void *b, unsigned n);
 
 Uint32 strlen(const char *str);
 
-int strcpy(const char *a, const char *b);
+int strcmp(const char *a, const char *b);
 
-char* strchr(const char* s, char c);
+char *strcpy(char *dest, const char *src);
+
+char *strcat(char *pszDest, const char *pszSrc);
+
+char *strchr(const char *s, char c);
 
 #endif

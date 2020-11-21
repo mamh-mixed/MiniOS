@@ -67,3 +67,128 @@ _asm_set_cursor:
     pop ebp
     ret
 
+global _asm_read_disk
+
+_asm_read_disk:
+; extern void _asm_read_disk(Uint32 sector, void *buffer);
+
+    push ebp
+    mov ebp,esp
+    push eax
+    push ecx
+    push edx
+    push esi
+
+    mov dx,0x1f2 ; 此端口存储要操作的扇区数
+    mov al,0x01 ; 仅操作一个扇区
+    out dx,al ; 发送到对应端口
+
+    mov eax,[ebp+0x04*2] ; eax 存储上扇区号
+    mov esi,[ebp+0x04*3] ; esi 存储缓冲区基址
+
+    mov dx,0x1f3 ; 此端口存储 LBA 扇区号的 0 ~ 7 位
+    out dx,al ; 发送 LBA 扇区号的 0 ~ 7 位
+
+    mov dx,0x1f4 ; 此存储 LBA 扇区号的 8 ~ 15 位
+    shr eax,8 ; 使 al 为 LBA 扇区号的 8 ~ 15 位
+    out dx,al ; 发送 LBA 扇区号的 8 ~ 15 位
+
+    mov dx,0x1f5 ; 此存储 LBA 扇区号的 16 ~ 23 位
+    shr eax,8 ; 使 al 为 LBA 扇区号的 16 ~ 23 位
+    out dx,al ; 发送 LBA 扇区号的 16 ~ 23 位
+
+    mov dx,0x1f6 ; 此端口存储 LBA 扇区号的 24 ~ 27 位以及一些控制信息
+    shr eax,8 ; 使 al 的低 4 位为 LBA 扇区号的 24 ~ 27 位
+    and al,0x0f ; 清零 al 的高 4 位
+    or al,0xe0 ; 写入控制信息，操作主盘，LBA 模式。
+    out dx,al ; 发送 LBA 扇区号的 24 ~ 27 位以及一些控制信息
+
+    mov dx,0x1f7 ; 此端口写时用来控制硬盘行为
+    mov al,0x20 ; 硬盘读命令
+    out dx,al ; 发送命令到硬盘
+
+    mov dx,0x1f7 ; 此端口在读时表示硬盘的状态
+    .wait_disk:
+        in al,dx ; 读取硬盘状态
+        and al,1000_1000b ; 保留硬盘忙位和数据准备位
+        cmp al,0000_1000b ; 判断是否不忙且已经准备好数据
+        jnz .wait_disk
+
+    mov dx,0x1f0 ; 此端口读硬盘时代表读取出来的数据，特殊的在于它是 16 位端口。
+    mov ecx,256 ; 一次读取 16 位，即 2 Byte，256 次就是 512 Byte。
+    .read_disk:
+        in ax,dx ; 读取 16 位的数据
+        mov [esi],ax ; 写入缓冲区
+        add esi,2 ; 给缓冲区基址加偏移
+        loop .read_disk
+
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ebp
+
+	ret
+
+global _asm_write_disk
+
+_asm_write_disk:
+; extern void _asm_write_disk(Uint32 sector, void *buffer);
+
+    push ebp
+    mov ebp,esp
+    push eax
+    push ecx
+    push edx
+    push esi
+
+    mov dx,0x1f2 ; 此端口存储要操作的扇区数
+    mov al,0x01 ; 仅操作一个扇区
+    out dx,al ; 发送到对应端口
+
+    mov eax,[ebp+0x04*2] ; eax 存储上扇区号
+    mov esi,[ebp+0x04*3] ; esi 存储缓冲区基址
+
+    mov dx,0x1f3 ; 此端口存储 LBA 扇区号的 0 ~ 7 位
+    out dx,al ; 发送 LBA 扇区号的 0 ~ 7 位
+
+    mov dx,0x1f4 ; 此存储 LBA 扇区号的 8 ~ 15 位
+    shr eax,8 ; 使 al 为 LBA 扇区号的 8 ~ 15 位
+    out dx,al ; 发送 LBA 扇区号的 8 ~ 15 位
+
+    mov dx,0x1f5 ; 此存储 LBA 扇区号的 16 ~ 23 位
+    shr eax,8 ; 使 al 为 LBA 扇区号的 16 ~ 23 位
+    out dx,al ; 发送 LBA 扇区号的 16 ~ 23 位
+
+    mov dx,0x1f6 ; 此端口存储 LBA 扇区号的 24 ~ 27 位以及一些控制信息
+    shr eax,8 ; 使 al 的低 4 位为 LBA 扇区号的 24 ~ 27 位
+    and al,0x0f ; 清零 al 的高 4 位
+    or al,0xe0 ; 写入控制信息，操作主盘，LBA 模式。
+    out dx,al ; 发送 LBA 扇区号的 24 ~ 27 位以及一些控制信息
+
+    mov dx,0x1f7 ; 此端口写时用来控制硬盘行为
+    mov al,0x30 ; 硬盘写命令
+    out dx,al ; 发送命令到硬盘
+
+    mov dx,0x1f7 ; 此端口在读时表示硬盘的状态
+    .wait_disk:
+        in al,dx ; 读取硬盘状态
+        and al,1000_1000b ; 保留硬盘忙位和数据准备位
+        cmp al,0000_1000b ; 判断是否不忙且已经准备好写数据
+        jnz .wait_disk
+
+    mov dx,0x1f0 ; 此端口读硬盘时代表读取出来的数据，特殊的在于它是 16 位端口。
+    mov ecx,256 ; 一次读取 16 位，即 2 Byte，256 次就是 512 Byte。
+    .write_disk:
+        mov ax,[esi] ; 取出要写入的数据
+        out dx,ax ; 发送给硬盘
+        add esi,2 ; 给缓冲区基址加偏移
+        loop .write_disk
+
+    pop esi
+    pop edx
+    pop ecx
+    pop eax
+    pop ebp
+
+	ret

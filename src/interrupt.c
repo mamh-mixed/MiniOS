@@ -1,10 +1,10 @@
 #include <interrupt.h>
 
-extern InterruptGateEntryTable _asm_intr_entry_table[48];
+extern InterruptGateEntryTable _asm_intr_entry_table[49];
 
 static IDTR pIdt;
 
-static InterruptGateDescriptor idt[0x78];
+static InterruptGateDescriptor idt[0x81];
 
 void initInterruptManagement()
 {
@@ -20,7 +20,7 @@ void initIDT()
     for (int i = 0; i < 0x28; i++, idtIndex++)
     {
         makeInterruptGateDescriptor(&idt[idtIndex], (_asm_intr_entry_table[i].entry),
-                                    INTERRULT_GATE_DESCRIPTOR__ATTRVUTE_DPL_0);
+                                    INTERRULT_GATE_DESCRIPTOR_ATTRIBUTE_DPL_0);
     }
 
     // 根据 src/interrupt.asm 的内存布局，中断向量 0x70 ~ 0x77 的入口在 _asm_intr_entry_table[0x28...48] 中
@@ -29,14 +29,18 @@ void initIDT()
     for (int i = 0x28; i < 48; i++, idtIndex++)
     {
         makeInterruptGateDescriptor(&idt[idtIndex], (_asm_intr_entry_table[i].entry),
-                                    INTERRULT_GATE_DESCRIPTOR__ATTRVUTE_DPL_0);
+                                    INTERRULT_GATE_DESCRIPTOR_ATTRIBUTE_DPL_0);
     }
+
+    idtIndex = 0x80;
+    makeInterruptGateDescriptor(&idt[idtIndex], (_asm_intr_entry_table[48].entry),
+                                    INTERRULT_GATE_DESCRIPTOR_ATTRIBUTE_DPL_3);
 }
 
 void setupIDT()
 {
     pIdt.baseAddr = idt;       // 获取 IDT 基址
-    pIdt.limit = 0x78 * 8 - 1; // 计算 IDT 界限，一共有 0x78 个索引，但并不是全部有效，有效的只有 0x00 ~ 0x27 和 0x70 ~ 0x77。
+    pIdt.limit = 0x81 * 8 - 1; // 计算 IDT 界限，一共有 0x81 个索引，但并不是全部有效，有效的只有 0x00 ~ 0x27 和 0x70 ~ 0x77 和 0x80。
     asm volatile(
         "lidt (%%eax)"
         :
@@ -55,10 +59,10 @@ void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptG
     descriptor->attribute = attribute;
 }
 
-void interruptDispatcher(Uint32 vector, Uint32 errorCode)
+void interruptDispatcher(Uint32 vector, Uint32 extra)
 {
     char str[50];
-    if (vector >= 0 && vector <= 0x13 && vector != 0x0e)
+    if (vector >= 0 && vector <= 0x13 && vector != 0x0e && vector != 0x01)
     {
         putUHex(vector);
         puts("\n");
@@ -76,7 +80,6 @@ void interruptDispatcher(Uint32 vector, Uint32 errorCode)
         );
         Uint32 us = cr2 >= 0x80000000 ? 0 : 1;
         installA4KBPage((void*)cr3, cr2, us);
-        
     }
     else if (vector == 0x21)
     {

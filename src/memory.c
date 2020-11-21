@@ -15,7 +15,7 @@ static MemoryPool physicalAddrPool;
 
 void initMemoryManagement()
 {
-    memoryPoolInit(&kernelVaddrPool, bitsForKernelVaddr, KERNEL_START_VADDR, KERNEL_VADDR_BYTE_LENGTH, 1);
+    memoryPoolInit(&kernelVaddrPool, bitsForKernelVaddr, KERNEL_START_VADDR, KERNEL_VADDR_BYTE_LENGTH, 4096);
     bitMapInit(&bitMapForPAddr, bitsForPAddr, PADDR_BYTE_LENGTH);
 }
 
@@ -112,6 +112,13 @@ void installA4KBPage(void* destPageDirPhyAddr ,Uint32 linearAddr, Uint32 us)
 
     pageDir[1022] = 0;
     memset((void *)linearAddr, 0, 0x1000);
+
+    // 刷新 TLB 
+    asm volatile(
+        "mov %%cr3,%%eax; \
+         mov %%eax,%%cr3;"
+         :::"eax"
+    );
 }
 
 Uint32 initAUserPageDir()

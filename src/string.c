@@ -55,7 +55,7 @@ Uint32 strlen(const char *str)
     return len;
 }
 
-int strcpy(const char *a, const char *b)
+int strcmp(const char *a, const char *b)
 {
     ASSERT(a != NULL);
     ASSERT(b != NULL);
@@ -65,6 +65,27 @@ int strcpy(const char *a, const char *b)
         b++;
     }
     return *a < *b ? -1 : *a > *b;
+}
+
+char *strcpy(char *des, const char *source)
+{
+    char *r = des;
+    ASSERT((des != NULL) && (source != NULL));
+    while ((*r++ = *source++) != '\0')
+        ;
+    return des;
+}
+
+char *strcat(char *pszDest, const char *pszSrc)
+{
+    char *pszOrigDst = pszDest;
+
+    while (*pszDest)
+        pszDest++;
+    while ((*pszDest++ = *pszSrc++) != '\0')
+        ;
+
+    return pszOrigDst;
 }
 
 char *strchr(const char *s, char c)
