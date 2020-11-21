@@ -1,3 +1,12 @@
+## [5acaaa0](https://github.com/ADD-SP/MiniOS/commit/5acaaa0fc2f3d147f808a967ebbd1c5fe6fee2b7)
+
+* 时间：2020-11-21
+* 信息：:triangular_flag_on_post: filesystem is implemented.
+* 变动：
+    * 实现了文件系统，但并未支持目录。
+    * 经过一次测试，修了一堆 bug，仙子啊 Ring3 进程大概可以正常工作了。
+
+
 ## [b4a975b](https://github.com/ADD-SP/MiniOS/commit/b4a975b844a02d391fdb17437a2ef42cc1474a8f)
 
 * 时间：2020-11-19
