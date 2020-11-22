@@ -1,3 +1,30 @@
+## [2d8f8cc](https://github.com/ADD-SP/MiniOS/commit/2d8f8cc7bc8a852a04e77c486df758cd55f47f1d)
+
+* 时间：2020-11-22
+* 信息：:triangular_flag_on_post: some syscalls is implemented.
+* 变动：
+    * OpenFile 时可以选择使用内存映射的方式打开，以这种模式打开文件并不会立即将内容读入内存，而是在读取相关内存的时候自动将页面调入内存。关闭时自动写回硬盘。
+
+## [e00d4ec](https://github.com/ADD-SP/MiniOS/commit/e00d4ec6ba1a5689e88421f0ef229c1251213810)
+
+* 时间：2020-11-22
+* 信息：:triangular_flag_on_post: some syscalls is implemented.
+* 变动：
+    * 实现了下列系统调用：
+        * getPid：获取进程 ID
+        * Open：打开文件
+        * Create：创建文件
+        * Read：读取文件
+        * Write：写入文件
+        * Close：关闭文件
+        * suspendProcess：暂停进程
+        * blockProcess：阻塞进程
+        * exitProcess：结束进程
+        * suspendThread：暂停线程
+        * blockThread：阻塞线程
+        * exitThread：结束线程
+    * 打开文件时可以选择使用内存映射的方式打开，以这种模式打开文件并不会立即将内容读入内存，而是在读取相关内存的时候自动换入内存。关闭时自动写回硬盘。
+
 ## [5acaaa0](https://github.com/ADD-SP/MiniOS/commit/5acaaa0fc2f3d147f808a967ebbd1c5fe6fee2b7)
 
 * 时间：2020-11-21
