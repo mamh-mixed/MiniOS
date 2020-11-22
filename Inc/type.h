@@ -65,7 +65,7 @@ typedef struct
     Uint32 length;
 } LinkList;
 
-typedef Bool(LinkListScanCallBack)(LinkListItem *, void *arg);
+typedef Bool(LinkListScanCallBack)(LinkListItem *item, void *arg);
 
 typedef struct
 {
@@ -166,11 +166,22 @@ typedef struct
 
 typedef void(ThreadFunc)();
 
+typedef enum
+{
+    Running,
+    Suspended,
+    Ready,
+    Blocked,
+    Died
+} TaskStatus;
+
+
 typedef struct
 {
     Uint32 id;
     const char *name;
     void *args;
+    TaskStatus status;
     Uint32 eip;
     Uint32 ss0;
     Uint32 esp0;
@@ -187,6 +198,7 @@ typedef struct
 {
     Uint32 id;
     const char *name;
+    TaskStatus status;
     Uint32 cr3;
     Uint32 dpl;
     MemoryPool memoryPool;
@@ -195,9 +207,19 @@ typedef struct
 
 typedef enum
 {
-    GetPid,
-    Read,
-    Write
+    GetPid, // 0
+    Open, // 1
+    Close, // 2
+    Create, // 3
+    Read, // 4
+    Write, // 5
+    Delete, // 6
+    SuspendProcess, // 7
+    BlockProcess, // 8
+    ExitProcess, // 9
+    SuspendThread, // 10
+    BlockThread, // 11
+    ExitThread // 12
 } SysCall;
 
 typedef enum
@@ -229,10 +251,12 @@ typedef struct
 {
     FileType fileType;
     Bool isExists;
+    Bool isOpen;
     char filename[256];
     Uint32 startSector;
     Uint32 sectorCount;
     Uint32 byteSize;
+    Byte padding[232]; // 凑够 512 Byte
 } Fcb;
 
 #pragma pack()

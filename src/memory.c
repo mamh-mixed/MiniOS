@@ -33,7 +33,7 @@ void *memoryPoolAlloc(MemoryPool *memoryPool, Uint32 byteSize)
 {
     ASSERT(memoryPool != NULL);
     Uint32 allocCount = (byteSize + 4) / memoryPool->allocUnit;
-    if (byteSize % memoryPool->allocUnit != 0)
+    if ((byteSize + 4) % memoryPool->allocUnit != 0)
     {
         allocCount++;
     }
@@ -63,7 +63,12 @@ Bool isPageDescriptorPresent(Uint32 descriptor)
     return (descriptor & (Uint32)0x00000001) == 0 ? FALSE : TRUE;
 }
 
-Uint32 makePageDescriptor(void* physicalAddr, Uint32 present, Uint32 readWrite, Uint32 us, Uint32 pwt, Uint32 pcd, Uint32 gloabl)
+Bool isPageDescriptorExists(Uint32 descriptor)
+{
+    return (descriptor & (Uint32)0xfffff000) == 0 ? FALSE : TRUE;
+}
+
+Uint32 makePageDescriptor(void *physicalAddr, Uint32 present, Uint32 readWrite, Uint32 us, Uint32 pwt, Uint32 pcd, Uint32 gloabl, Uint32 avl)
 {
     Uint32 attr = 0;
     attr |= present == 0 ? 0x00000000 : 0x00000001;
@@ -72,63 +77,88 @@ Uint32 makePageDescriptor(void* physicalAddr, Uint32 present, Uint32 readWrite, 
     attr |= pwt == 0 ? 0x00000000 : 0x00000008;
     attr |= pcd == 0 ? 0x00000000 : 0x00000010;
     attr |= gloabl == 0 ? 0x00000000 : 0x00000100;
+    attr |= avl << 9;
     Uint32 descriptor = attr | ((Uint32)physicalAddr & 0xfffff000);
     return descriptor;
 }
 
-void installA4KBPage(void* destPageDirPhyAddr ,Uint32 linearAddr, Uint32 us)
+void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 us)
 {
     ASSERT(linearAddr != 0);
     Uint32 *pageDir = PAGE_DIR_BASE_ADDR;
 
-    Uint32 tempDescriptor = makePageDescriptor(destPageDirPhyAddr, 1, 1, us, 0, 0, 0);
+    Uint32 tempDescriptor = makePageDescriptor(destPageDirPhyAddr, 1, 1, us, 0, 0, 0, 0);
     pageDir[1022] = tempDescriptor;
 
-    Uint32 *destPageDir = (Uint32*)0xffffe000;
+    Uint32 *destPageDir = (Uint32 *)0xffffe000;
     Uint32 pageDirIndex = linearAddr >> 22; // 线性地址的高 10 位就是页目录的索引
     Bool needClear = FALSE;
-    if (!isPageDescriptorPresent(destPageDir[pageDirIndex]))
+    if (!isPageDescriptorExists(destPageDir[pageDirIndex]))
     {
         needClear = TRUE;
         Uint32 *descriptorAddr = phyMalloc4KB();
         ASSERT(descriptorAddr != NULL);
-        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0);
+        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0, 0);
         destPageDir[pageDirIndex] = descriptor;
     }
 
-    Uint32 *pageTable = (Uint32*)(0xff800000 | (pageDirIndex << 12));
+    Uint32 *pageTable = (Uint32 *)(0xff800000 | (pageDirIndex << 12));
     Uint32 pageTableIndex = (linearAddr & 0x003ff000) >> 12;
     if (needClear)
     {
         memset(pageTable, 0, 4096);
     }
-    if (!isPageDescriptorPresent(pageTable[pageTableIndex]))
+    if (!isPageDescriptorExists(pageTable[pageTableIndex]))
     {
         Uint32 *descriptorAddr = phyMalloc4KB();
         ASSERT(descriptorAddr != NULL);
-        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0);
+        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0, 0);
         pageTable[pageTableIndex] = descriptor;
     }
 
     pageDir[1022] = 0;
     memset((void *)linearAddr, 0, 0x1000);
 
-    // 刷新 TLB 
+    // 刷新 TLB
     asm volatile(
         "mov %%cr3,%%eax; \
-         mov %%eax,%%cr3;"
-         :::"eax"
-    );
+         mov %%eax,%%cr3;" ::
+            : "eax");
+}
+
+void freeUserPage(void *destPageDirPhyAddr)
+{
+    Uint32 *curPageDir = PAGE_DIR_BASE_ADDR;
+    Uint32 tempDescriptor = makePageDescriptor(destPageDirPhyAddr, 1, 1, 0, 0, 0, 0, 0);
+    curPageDir[1022] = tempDescriptor;
+
+    Uint32 *destPageDir = (Uint32 *)0xffffe000;
+    for (Uint32 i = 0; i < 512; i++)
+    {
+        if (isPageDescriptorExists(destPageDir[i]))
+        {
+            Uint32 *pageTable = (Uint32 *)((Uint32)0xffe00000 | (i << 12));
+            for (Uint32 j = 0; j < 1024; j++)
+            {
+                if (isPageDescriptorExists(pageTable[j]))
+                {
+                    phyFree((void *)GET_BASE_ADDR(pageTable[j]));
+                }
+            }
+            phyFree((void *)GET_BASE_ADDR(destPageDir[i]));
+        }
+    }
+    phyFree(destPageDirPhyAddr);
 }
 
 Uint32 initAUserPageDir()
 {
     void *phyAddr = phyMalloc4KB(); // 申请一个物理页
     ASSERT(phyAddr != NULL);
-    Uint32 *pageDir = PAGE_DIR_BASE_ADDR; // 页目录基址
-    Uint32 descriptor = makePageDescriptor(phyAddr, 1, 1, 0, 0, 0, 0); // 页目录内容依然敏感，所以仅 ring0 能访问。
-    pageDir[1022] = descriptor; // 借用页目录的倒数第二项，用来初始化新的页目录。
-    
+    Uint32 *pageDir = PAGE_DIR_BASE_ADDR;                              // 页目录基址
+    Uint32 descriptor = makePageDescriptor(phyAddr, 1, 1, 0, 0, 0, 0, 0); // 页目录内容依然敏感，所以仅 ring0 能访问。
+    pageDir[1022] = descriptor;                                        // 借用页目录的倒数第二项，用来初始化新的页目录。
+
     Uint32 *newPageDir = (Uint32 *)0xffffe000; // 此地址指向新的页目录基址
     newPageDir[1023] = descriptor;
 
@@ -143,7 +173,7 @@ Uint32 initAUserPageDir()
 
 void *sysMalloc(Uint32 byteLength)
 {
-    void* startAddr = memoryPoolAlloc(&kernelVaddrPool, byteLength);
+    void *startAddr = memoryPoolAlloc(&kernelVaddrPool, byteLength);
     ASSERT(startAddr != NULL);
     memset(startAddr, 0, byteLength);
     return startAddr;
@@ -160,7 +190,7 @@ void *phyMalloc4KB()
     Int32 bitIndex = bitMapScanAndSet(&bitMapForPAddr, 1);
     ASSERT(bitIndex != -1);
     Uint32 startAddr = (Uint32)START_PADDR + bitIndex * 4096;
-    return (void*)startAddr;
+    return (void *)startAddr;
 }
 
 void phyFree(void *startAddr)

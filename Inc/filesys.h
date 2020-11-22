@@ -54,13 +54,17 @@ Int32 findFreeFileDescriptor();
 
 Uint32 getFileList(char *buffer);
 
-void createFile(const char *filename);
+Bool openFile(const char *filename);
 
-void readFile(const char *filename, void *buffer);
+Bool closeFile(const char *filename);
 
-void writeFile(const char *filename, void *buffer, Uint32 bufferSize);
+Bool createFile(const char *filename, const FileType fileType);
 
-void deleteFile(const char *filename);
+Bool readFile(const char *filename, void *buffer);
+
+Bool writeFile(const char *filename, void *buffer, Uint32 bufferSize);
+
+Bool deleteFile(const char *filename);
 
 void readDisk(Uint32 startSector, Uint32 count, void *buffer);
 

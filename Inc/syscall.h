@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <type.h>
 #include <sched.h>
+#include <filesys.h>
 
 /*
     系统调用约定：
@@ -20,10 +21,28 @@ Uint32 syscallDispatcher(SysCall syscall, Uint32 argc, Uint32 *esp0);
 
 Uint32 syscallGetPid();
 
-Int32 syscallOpen(const char* filename);
+Bool syscallOpen(const char *filename);
 
-Int32 syscallRead(const char* filename, void *buffer);
+Bool syscallClose(const char *filename);
 
-Int32 syscallWrite(const char* filename, void *buffer);
+Bool syscallCreate(const char *filename, FileType fileType);
+
+Bool syscallRead(const char *filename, void *buffer);
+
+Bool syscallWrite(const char *filename, void *buffer, Uint32 bufferSize);
+
+Bool syscallDelete(const char* filename);
+
+Bool syscallSuspendProcess();
+
+Bool syscallBlockedProcess();
+
+void syscallExitProcess();
+
+Bool syscallSuspendThread();
+
+Bool syscallBlockeddThread();
+
+void syscallExitThread();
 
 #endif

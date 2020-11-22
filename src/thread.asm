@@ -61,6 +61,17 @@ section .text
         pop ebp
         ret
 
+    global _asm_block_or_suspend_thread
+
+    extern _asm_int0x20_entry
+
+    _asm_block_or_suspend_thread:
+        pushf
+        and dword [esp],0xffff_fdff
+        push cs
+        call _asm_int0x20_entry
+        ret
+
     
     global _asm_test
 

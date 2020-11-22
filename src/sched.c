@@ -24,6 +24,7 @@ void initScheduler()
     Pcb *kernelPcb = (Pcb *)sysMalloc(sizeof(Pcb));
     kernelPcb->id = 0;
     kernelPcb->dpl = 0;
+    kernelPcb->status = Ready;
     Uint32 cr3;
     asm volatile(
         "mov %%cr3,%%eax;"
@@ -70,28 +71,58 @@ Bool isRingChange()
 void sched()
 {
     InterruptStatus oldStatus = interruptDisable();
-    LinkListItem *item = linkListNoSyncGetNext(&curPcb->threadList);
+    LinkListItem *item = NULL;
     Tcb *tcb = NULL;
     Pcb *pcb = NULL;
-    if (item == NULL)
+    if (curPcb->status == Ready)
     {
-        item = linkListNoSyncGetNext(&processList);
-        item = item == NULL ? linkListNoSyncGetNext(&processList) : item;
-        ASSERT(item != NULL);
-        pcb = item->data;
-        item = linkListNoSyncGetNext(&pcb->threadList);
-        item = item == NULL ? linkListNoSyncGetNext(&pcb->threadList) : item;
-        ASSERT(item != NULL);
-        tcb = item->data;
+        item = linkListNoSyncGetNext(&curPcb->threadList);
+        if (item == NULL)
+        {
+            pcb = findNextPcb(&processList);
+            tcb = findNextTcb(&pcb->threadList);
+        }
+        else
+        {
+            pcb = curPcb;
+            tcb = item->data;
+        }
     }
     else
     {
-        tcb = item->data;
-        pcb = curPcb;
+        pcb = findNextPcb(&processList);
+        tcb = findNextTcb(&pcb->threadList);
     }
+
     nextTcb = tcb;
     nextPcb = pcb;
     interruptSetStatus(oldStatus);
+}
+
+Pcb *findNextPcb(LinkList *list)
+{
+    LinkListItem *item = NULL;
+    while (1)
+    {
+        item = linkListNoSyncGetNext(list);
+        if (item != NULL && ((Pcb *)(item->data))->status == Ready)
+        {
+            return item->data;
+        }
+    }
+}
+
+Tcb *findNextTcb(LinkList *list)
+{
+    LinkListItem *item = NULL;
+    while (1)
+    {
+        item = linkListNoSyncGetNext(list);
+        if (item != NULL && ((Tcb *)(item->data))->status == Ready)
+        {
+            return item->data;
+        }
+    }
 }
 
 Uint32 getNextEsp0()

@@ -110,13 +110,14 @@ section .text
         push gs
         pushad
         
+        ; 保存当前任务的内核栈指针
         mov eax,esp
         push eax
         call saveCurEsp0
         add esp,4
 
-        call sched
-        call isProcessChange
+        call sched ; 找出下一个任务
+        call isProcessChange ; 是否涉及到进程切换
 
         cmp eax,0x00 ; 是否涉及到进程切换
         je .b1
@@ -147,6 +148,7 @@ section .text
             call switchToNext ; 切换到下一个 TCB 并设置 TSS 中的 esp0 字段
             add esp,4
         .b4:
+        ; 取出下一个任务的内核栈指针并恢复上下文
         mov esp,[.esp_bak]
         popad
         pop gs
@@ -231,36 +233,24 @@ section .text
         push esi
         push edi
 
-        mov ebx,[ebp+0x04*3] ; 获取用户栈栈顶指针
-        xor esi,esi ; 系统调用参数下标，从右到左。
-        xor edi,edi
-
-        cmp ecx,0
-        jz .b1
-        ; 压入所有参数
-        .b0:
-            mov edi,esi
-            shl edi,2
-            add edi,ebx
-            push dword [edi]
-            loop .b0
+        mov ebx,[ebp+0x04*4] ; 获取用户栈栈顶指针
+        mov [_asm_int0x80_ecx_bak],ecx
+            
         
         .b1:
-        mov ecx,esi ; 循环完毕后 esi 就是参数的数量
-        mov [_asm_int0x80_ecx_bak],ecx
-        mov ebx,esp
+        ; mov ebx,esp
         push ebx ; 压入内核栈顶指针
         push ecx ; 压入参数数量
         push eax ; 压入系统调用号
         call syscallDispatcher
         add esp,12
         
-        cmp ecx,0
-        jz .b3
-        mov ecx,[_asm_int0x80_ecx_bak]
-        .b2:
-            add esp,4
-            loop .b2
+        ; cmp ecx,0
+        ; jz .b3
+        ; mov ecx,[_asm_int0x80_ecx_bak]
+        ; .b2:
+        ;     add esp,4
+        ;     loop .b2
         
         .b3:
         pop edi

@@ -24,6 +24,10 @@ Uint32 getNextEsp0();
 
 Uint32 getNextCr3();
 
+Pcb *findNextPcb(LinkList *list);
+
+Tcb *findNextTcb(LinkList *list);
+
 void saveCurEsp0(Uint32 esp0);
 
 void switchToNext(Uint32 esp0);

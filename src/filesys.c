@@ -68,16 +68,18 @@ void readAllFcb()
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
     ASSERT(fcbTable != NULL);
     Uint32 sector = fileSystemInfo->fileDescriptorStartSector;
-    Uint32 sectorCount =  (ALIGN_512(sizeof(Fcb)) / 512);
+    Uint32 sectorCount = (ALIGN_512(sizeof(Fcb)) / 512);
     Uint32 index = 0;
     for (; index < fileSystemInfo->fileDescriptorCount; index++)
     {
         readDisk(sector, sectorCount, &fcbTable[index]);
+        ASSERT(fcbTable[index].isOpen == FALSE)
         sector += sectorCount;
     }
     for (; index < fileSystemInfo->fileDescriptorMaxCount; index++)
     {
         fcbTable[index].isExists = FALSE;
+        fcbTable[index].isOpen = FALSE;
     }
 }
 
@@ -87,12 +89,15 @@ void writeAllFcb()
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
     ASSERT(fcbTable != NULL);
     Uint32 sector = fileSystemInfo->fileDescriptorStartSector;
-    Uint32 sectorCount =  (ALIGN_512(sizeof(Fcb)) / 512);
+    Uint32 sectorCount = (ALIGN_512(sizeof(Fcb)) / 512);
     for (Uint32 i = 0; i < fileSystemInfo->fileDescriptorMaxCount; i++)
     {
         if (fcbTable[i].isExists)
         {
+            Bool old = fcbTable[i].isOpen;
+            fcbTable[i].isOpen = FALSE;
             writeDisk(sector, sectorCount, &fcbTable[i]);
+            fcbTable[i].isOpen = old;
             sector += sectorCount;
         }
     }
@@ -114,6 +119,7 @@ void createStdin()
     fcbTable[0].startSector = File_SYSTEM_FILE_START_SECTOR;
     fcbTable[0].sectorCount = 1;
     fcbTable[0].isExists = TRUE;
+    fcbTable[0].isOpen = FALSE;
     strcpy(fcbTable[0].filename, "stdin");
 }
 
@@ -125,6 +131,7 @@ void createStdout()
     (fileSystemInfo->fileDescriptorCount)++;
     fcbTable[1].fileType = Stdout;
     fcbTable[1].isExists = TRUE;
+    fcbTable[1].isOpen = FALSE;
     fcbTable[1].startSector = File_SYSTEM_FILE_START_SECTOR + 1;
     fcbTable[1].sectorCount = 1;
     strcpy(fcbTable[1].filename, "stdout");
@@ -135,7 +142,7 @@ Uint32 allocSector(Uint32 sectorCount)
     ASSERT(fileSystemInfo != NULL);
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
     ASSERT(fcbTable != NULL);
-    return bitMapScanAndSet(&sectorMap, sectorCount) + fileSystemInfo->fileStartSector;
+    return bitMapScanAndSet(&sectorMap, sectorCount) + fileSystemInfo->fileStartSector + 2;
 }
 
 void freeSector(Uint32 startSector, Uint32 sectorCount)
@@ -143,7 +150,7 @@ void freeSector(Uint32 startSector, Uint32 sectorCount)
     ASSERT(fileSystemInfo != NULL);
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
     ASSERT(fcbTable != NULL);
-    Uint32 bitIndex = startSector - fileSystemInfo->fileStartSector;
+    Uint32 bitIndex = startSector - fileSystemInfo->fileStartSector - 2;
     bitMapUnSetBitRange(&sectorMap, bitIndex, sectorCount);
 }
 
@@ -195,37 +202,105 @@ Uint32 getFileList(char *buffer)
     }
 }
 
-void createFile(const char *filename)
+Bool openFile(const char *filename)
 {
     ASSERT(fileSystemInfo != NULL);
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
     ASSERT(fcbTable != NULL);
     ASSERT(filename != NULL);
-    Int32 index = findFreeFileDescriptor();
-    ASSERT(index != -1);
-    fcbTable[index].fileType = Gernal;
+
+    Int32 index = findFileDescriptor(filename);
+    if (index == -1)
+    {
+        return FALSE;
+    }
+    fcbTable[index].isOpen = TRUE;
+    return TRUE;
+}
+
+Bool closeFile(const char *filename)
+{
+    ASSERT(fileSystemInfo != NULL);
+    ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
+    ASSERT(fcbTable != NULL);
+    ASSERT(filename != NULL);
+
+    Int32 index = findFileDescriptor(filename);
+    if (index == -1)
+    {
+        return FALSE;
+    }
+    fcbTable[index].isOpen = FALSE;
+    return TRUE;
+}
+
+Bool createFile(const char *filename, const FileType fileType)
+{
+    ASSERT(fileSystemInfo != NULL);
+    ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
+    ASSERT(fcbTable != NULL);
+    ASSERT(filename != NULL);
+
+    Int32 index = findFileDescriptor(filename);
+    if (index != -1)
+    {
+        return FALSE;
+    }
+    index = findFreeFileDescriptor();
+    if (index == -1)
+    {
+        return FALSE;
+    }
+
+    fcbTable[index].fileType = fileType;
     fcbTable[index].isExists = TRUE;
+    fcbTable[index].isOpen = FALSE;
     strcpy(fcbTable[index].filename, filename);
     fcbTable[index].startSector = allocSector(1);
     fcbTable[index].sectorCount = 1;
     fcbTable[index].byteSize = 0;
     (fileSystemInfo->fileDescriptorCount)++;
     writeBackToDisk();
+    return TRUE;
 }
 
-void readFile(const char *filename, void *buffer)
+Bool readFile(const char *filename, void *buffer)
 {
     ASSERT(fileSystemInfo != NULL);
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
     ASSERT(fcbTable != NULL);
     ASSERT(filename != NULL);
     ASSERT(buffer != NULL);
+
     Int32 index = findFileDescriptor(filename);
-    ASSERT(index != -1);
-    readDisk(fcbTable[index].startSector, fcbTable[index].sectorCount, buffer);
+    if (index == -1)
+    {
+        return FALSE;
+    }
+
+    if (!fcbTable[index].isOpen)
+    {
+        return FALSE;
+    }
+    if (fcbTable[index].fileType == Stdin)
+    {
+        char c = getchar();
+        if (c != '\0')
+        {
+            ((char*)buffer)[0] = c;
+            return TRUE;
+        }
+        return FALSE;
+    }
+    else
+    {
+        readDisk(fcbTable[index].startSector, fcbTable[index].sectorCount, buffer);
+    }
+
+    return TRUE;
 }
 
-void writeFile(const char *filename, void *buffer, Uint32 bufferSize)
+Bool writeFile(const char *filename, void *buffer, Uint32 bufferSize)
 {
     ASSERT(fileSystemInfo != NULL);
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
@@ -234,20 +309,36 @@ void writeFile(const char *filename, void *buffer, Uint32 bufferSize)
     ASSERT(buffer != NULL);
     ASSERT(bufferSize != 0);
     ASSERT(bufferSize % 512 == 0);
+
     Int32 index = findFileDescriptor(filename);
-    ASSERT(index != -1);
-    if (bufferSize > fcbTable[index].sectorCount * 512)
+    if (index == -1)
     {
-        Uint32 sectorCount = bufferSize / 512;
-        freeSector(fcbTable[index].startSector, fcbTable[index].sectorCount);
-        fcbTable[index].startSector = allocSector(sectorCount);
-        fcbTable[index].sectorCount = sectorCount;
+        return FALSE;
     }
-    writeDisk(fcbTable[index].startSector, fcbTable[index].sectorCount, buffer);
-    writeBackToDisk();
+    if (!fcbTable[index].isOpen)
+    {
+        return FALSE;
+    }
+    if (fcbTable[index].fileType == Stdout)
+    {
+        putsNoSync((char *)buffer);
+    }
+    else
+    {
+        if (bufferSize > fcbTable[index].sectorCount * 512)
+        {
+            Uint32 sectorCount = bufferSize / 512;
+            freeSector(fcbTable[index].startSector, fcbTable[index].sectorCount);
+            fcbTable[index].startSector = allocSector(sectorCount);
+            fcbTable[index].sectorCount = sectorCount;
+        }
+        writeDisk(fcbTable[index].startSector, fcbTable[index].sectorCount, buffer);
+        writeBackToDisk();
+    }
+    return TRUE;
 }
 
-void deleteFile(const char *filename)
+Bool deleteFile(const char *filename)
 {
     ASSERT(fileSystemInfo != NULL);
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
@@ -256,10 +347,17 @@ void deleteFile(const char *filename)
     Int32 index = findFileDescriptor(filename);
     if (index != -1)
     {
+        if (!fcbTable[index].isOpen)
+        {
+            return FALSE;
+        }
         fcbTable[index].isExists = FALSE;
         freeSector(fcbTable[index].startSector, fcbTable[index].sectorCount);
         (fileSystemInfo->fileDescriptorCount)--;
+        writeBackToDisk();
+        return TRUE;
     }
+    return FALSE;
 }
 
 void readDisk(Uint32 startSector, Uint32 count, void *buffer)

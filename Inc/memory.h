@@ -15,6 +15,10 @@
 
 #define START_PADDR ((void *)(0x10000000))
 
+#define GET_AVL(descriptor) ((descriptor) & 0x00000e00) >> 9)
+
+#define GET_BASE_ADDR(descriptor) (((descriptor) & 0xfffff000) >> 12)
+
 void initMemoryManagement();
 
 void memoryPoolInit(MemoryPool *memoryPool, Byte *bits, Uint32 startAddr, Uint32 unitCount, Uint32 allocUnit);
@@ -25,9 +29,13 @@ void memoryPoolFree(MemoryPool *memoryPool, void *startAddr);
 
 Bool isPageDescriptorPresent(Uint32 descriptor);
 
-Uint32 makePageDescriptor(void *physicalAddr, Uint32 present, Uint32 rw, Uint32 us, Uint32 pwt, Uint32 pcd, Uint32 gloabl);
+Bool isPageDescriptorExists(Uint32 descriptor);
+
+Uint32 makePageDescriptor(void *physicalAddr, Uint32 present, Uint32 rw, Uint32 us, Uint32 pwt, Uint32 pcd, Uint32 gloabl, Uint32 avl);
 
 void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 us);
+
+void freeUserPage(void *destPageDirPhyAddr);
 
 Uint32 initAUserPageDir();
 

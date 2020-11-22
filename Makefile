@@ -44,17 +44,19 @@ kernel : src/kernel.c Makefile
 	$(call gcc,$(OPTIMIZERS_LEVEL),obj/queue.o,src/queue.c)
 	$(call gcc,$(OPTIMIZERS_LEVEL),obj/keyboard.o,src/keyboard.c)
 	$(call gcc,$(OPTIMIZERS_LEVEL),obj/gdt.o,src/gdt.c)
-	$(call gcc,$(OPTIMIZERS_LEVEL),obj/process.o,src/process.c)
+	$(call gcc,$(OPTIMIZERS_LEVEL),obj/c_process.o,src/process.c)
 	$(call gcc,$(OPTIMIZERS_LEVEL),obj/sched.o,src/sched.c)
 	$(call gcc,$(OPTIMIZERS_LEVEL),obj/syscall.o,src/syscall.c)
 	$(call gcc,$(OPTIMIZERS_LEVEL),obj/filesys.o,src/filesys.c)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_interrupt.o,src/interrupt.asm)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_thread.o,src/thread.asm)
+	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_process.o,src/process.asm)
 	$(call ld,main,0x80100000,bin/kernel.bin,\
 	obj/asm_util.o obj/c_util.o obj/string.o obj/stdlib.o obj/asm_interrupt.o \
 	obj/c_interrupt.o obj/debug.o obj/stdio.o obj/memory.o obj/bitmap.o obj/linklist.o \
 	obj/asm_thread.o obj/c_thread.o obj/sync.o obj/queue.o obj/keyboard.o \
-	obj/gdt.o obj/process.o obj/sched.o obj/syscall.o obj/filesys.o obj/kernel.o)
+	obj/gdt.o obj/asm_process.o obj/c_process.o obj/sched.o obj/syscall.o obj/filesys.o  \
+	obj/kernel.o)
 
 loader : src/loader.asm inc/const.asm Makefile
 	$(call nasm,$(NASM_FORMAT_BIN),bin/loader.bin,src/loader.asm)
@@ -64,8 +66,8 @@ util : src/util.asm src/util.c inc/util.h Makefile
 	$(call gcc,0,obj/c_util.o,src/util.c)
 	$(call nasm,$(NASM_FORMAT_ELF),obj/asm_util.o,src/util.asm)
 
-test : test/a.asm Makefile
-	$(call nasm,$(NASM_FORMAT_BIN),bin/a.bin,test/a.asm)
+test : test/fstest.asm test/empty.asm Makefile
+	$(call nasm,$(NASM_FORMAT_BIN),bin/fstest.bin,test/fstest.asm)
 	$(call nasm,$(NASM_FORMAT_BIN),bin/empty.bin,test/empty.asm)
 
 

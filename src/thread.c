@@ -7,6 +7,7 @@ Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, ThreadFunc func, void *
     ASSERT(pcb->dpl == 0 || pcb->dpl == 3);
     tcb->id = id;
     tcb->name = name;
+    tcb->status = Ready;
     if (pcb->dpl == 0)
     {
         tcb->cs = GDT_SELECTOR_4GB_CODE_DPL_0;
@@ -45,4 +46,29 @@ Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, ThreadFunc func, void *
 
 void startThread(Tcb *tcb)
 {
+}
+
+Bool suspendThread(Tcb *tcb)
+{
+    tcb->status = Suspended;
+    _asm_block_or_suspend_thread();
+    return TRUE;
+}
+
+Bool blockThread(Tcb *tcb)
+{
+    tcb->status = Blocked;
+    _asm_block_or_suspend_thread();
+    return TRUE;
+}
+
+Bool wakeUpThread(Tcb *tcb)
+{
+    tcb->status = Ready;
+    return TRUE;
+}
+
+void exitThread(Tcb *tcb)
+{
+
 }
