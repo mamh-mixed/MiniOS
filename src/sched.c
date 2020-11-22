@@ -3,6 +3,7 @@
 static LinkList processList;
 static Uint16 tssSelectorDpl0;
 static TaskStateSegment *pTss = NULL;
+static Pcb *kernelPcb = NULL;
 static Pcb *curPcb = NULL, *nextPcb = NULL;
 static Tcb *curTcb = NULL, *nextTcb = NULL;
 
@@ -21,18 +22,10 @@ void initScheduler()
         : "a"(tssSelectorDpl0)
         :);
 
-    Pcb *kernelPcb = (Pcb *)sysMalloc(sizeof(Pcb));
-    kernelPcb->id = 0;
-    kernelPcb->dpl = 0;
-    kernelPcb->status = Ready;
-    Uint32 cr3;
-    asm volatile(
-        "mov %%cr3,%%eax;"
-        : "=a"(cr3)::);
-    kernelPcb->cr3 = cr3;
-    ASSERT(cr3 != 0);
-    linkListNoSyncInit(&kernelPcb->threadList);
+    kernelPcb = createProcess(0, 0, TRUE);
+    startProcess(kernelPcb);
     Tcb *kernelTcb = createThread(kernelPcb, 0, "kernel", NULL, NULL);
+    startThread(kernelTcb);
     appendPcb(kernelPcb);
     curPcb = kernelPcb;
     curTcb = kernelTcb;
@@ -105,9 +98,13 @@ Pcb *findNextPcb(LinkList *list)
     while (1)
     {
         item = linkListNoSyncGetNext(list);
-        if (item != NULL && ((Pcb *)(item->data))->status == Ready)
+        if (item != NULL)
         {
-            return item->data;
+            Pcb *pcb = item->data;
+            if (pcb->status == Ready && linkListNoSyncFind(&pcb->threadList, hasReadyThread, NULL) != NULL)
+            {
+                return item->data;
+            }
         }
     }
 }
@@ -176,6 +173,14 @@ Pcb *getCurPcb()
     return ret;
 }
 
+Pcb *getKernelPcb()
+{
+    InterruptStatus oldStatus = interruptDisable();
+    Pcb *ret = kernelPcb;
+    interruptSetStatus(oldStatus);
+    return ret;
+}
+
 Tcb *getCurTcb()
 {
     InterruptStatus oldStatus = interruptDisable();
@@ -190,4 +195,10 @@ Uint32 getCurRing()
     Uint32 ret = curPcb->dpl;
     interruptSetStatus(oldStatus);
     return ret;
+}
+
+Bool hasReadyThread(LinkListItem *item, void *args)
+{
+    Tcb *tcb = item->data;
+    return tcb->status == Ready ? TRUE : FALSE;
 }

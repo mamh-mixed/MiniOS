@@ -11,6 +11,8 @@
 #include <keyboard.h>
 #include <linklist.h>
 #include <gdt.h>
+#include <sched.h>
+#include <filesys.h>
 
 #define EFLAGS_IF 0x00000200 // eflags 寄存器中的 if 位
 #define GET_EFLAGS(EFLAG_VAR) asm volatile("pushfl; popl %0" \
@@ -32,6 +34,8 @@ void setupIDT();
 void makeInterruptGateDescriptor(InterruptGateDescriptor *descriptor, InterruptGateEntry entry, Uint8 attribute);
 
 void interruptDispatcher(Uint32 vector, Uint32 extra);
+
+void pageFaultHandler();
 
 InterruptStatus interruptGetStatus();
 

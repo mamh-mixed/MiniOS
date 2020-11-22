@@ -138,8 +138,24 @@ LinkListItem *_linkListFind(LinkList *list, LinkListScanCallBack callback, void 
 {
     LinkListItem *p = list->head;
     Uint32 length = _linkListGetLength(list, isSync);
+    if (isSync)
+    {
+        semaphoreGet(&list->semaphore);
+    }
 
-    return NULL;
+    while (p != NULL)
+    {
+        if (callback(p, arg) == TRUE)
+        {
+            break;
+        }
+    }
+
+    if (isSync)
+    {
+        semaphoreRelease(&list->semaphore);
+    }
+    return p;
 }
 
 LinkListItem *_linkListGetNext(LinkList *list, Bool isSync)
@@ -220,8 +236,6 @@ void linkListSyncDestroy(LinkList *list)
         _linkListPop(list, TRUE);
     }
 }
-
-
 
 void linkListNoSyncInit(LinkList *list)
 {

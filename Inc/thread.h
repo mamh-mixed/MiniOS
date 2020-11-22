@@ -11,7 +11,7 @@
 #include <gdt.h>
 #include <interrupt.h>
 
-Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, ThreadFunc func, void *args);
+Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, void *entry, void *args);
 
 extern Uint32 _asm_create_thread_dpl0(Uint32 cs, Uint32 ds, Uint32 es, Uint32 fs, Uint32 gs, Uint32 esp0, Uint32 eip);
 

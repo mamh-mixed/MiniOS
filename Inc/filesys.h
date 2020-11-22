@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <type.h>
 #include <string.h>
+#include <sched.h>
 
 #define FILE_SYSTEM_INFO_SECTOR 5000
 
@@ -54,9 +55,15 @@ Int32 findFreeFileDescriptor();
 
 Uint32 getFileList(char *buffer);
 
-Bool openFile(const char *filename);
+Fcb *getFcb(Uint32 index);
+
+Bool openFile(const char *filename, OpenMode mode, Uint32 fileOffset, Uint32 mapLength);
 
 Bool closeFile(const char *filename);
+
+Uint32 mmap(const char *filename);
+
+Bool munmap(const char *filename);
 
 Bool createFile(const char *filename, const FileType fileType);
 
@@ -65,6 +72,10 @@ Bool readFile(const char *filename, void *buffer);
 Bool writeFile(const char *filename, void *buffer, Uint32 bufferSize);
 
 Bool deleteFile(const char *filename);
+
+Bool appendToPcb(Pcb *pcb, Uint32 index);
+
+Bool deleteFromPcb(Pcb *pcb, Uint32 index);
 
 void readDisk(Uint32 startSector, Uint32 count, void *buffer);
 

@@ -94,10 +94,13 @@ void writeAllFcb()
     {
         if (fcbTable[i].isExists)
         {
-            Bool old = fcbTable[i].isOpen;
+            Fcb oldFcb;
+            memcpy(&oldFcb, &fcbTable[i], sizeof(Fcb));
             fcbTable[i].isOpen = FALSE;
+            fcbTable[i].isMaped = FALSE;
+            fcbTable[i].isInMemory = FALSE;
             writeDisk(sector, sectorCount, &fcbTable[i]);
-            fcbTable[i].isOpen = old;
+            memcpy(&fcbTable[i], &oldFcb, sizeof(Fcb));
             sector += sectorCount;
         }
     }
@@ -120,6 +123,7 @@ void createStdin()
     fcbTable[0].sectorCount = 1;
     fcbTable[0].isExists = TRUE;
     fcbTable[0].isOpen = FALSE;
+    fcbTable[0].isMaped = FALSE;
     strcpy(fcbTable[0].filename, "stdin");
 }
 
@@ -132,6 +136,7 @@ void createStdout()
     fcbTable[1].fileType = Stdout;
     fcbTable[1].isExists = TRUE;
     fcbTable[1].isOpen = FALSE;
+    fcbTable[1].isMaped = FALSE;
     fcbTable[1].startSector = File_SYSTEM_FILE_START_SECTOR + 1;
     fcbTable[1].sectorCount = 1;
     strcpy(fcbTable[1].filename, "stdout");
@@ -202,12 +207,19 @@ Uint32 getFileList(char *buffer)
     }
 }
 
-Bool openFile(const char *filename)
+Fcb *getFcb(Uint32 index)
+{
+    return &fcbTable[index];
+}
+
+Bool openFile(const char *filename, OpenMode mode, Uint32 fileOffset, Uint32 mapLength)
 {
     ASSERT(fileSystemInfo != NULL);
     ASSERT(strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC) == 0);
     ASSERT(fcbTable != NULL);
     ASSERT(filename != NULL);
+    ASSERT(fileOffset % 512 == 0);
+    ASSERT(mapLength % 512 == 0);
 
     Int32 index = findFileDescriptor(filename);
     if (index == -1)
@@ -215,7 +227,19 @@ Bool openFile(const char *filename)
         return FALSE;
     }
     fcbTable[index].isOpen = TRUE;
-    return TRUE;
+    fcbTable[index].isMaped = FALSE;
+
+    if (mode == MapOpen)
+    {
+        fcbTable[index].isMaped = TRUE;
+        fcbTable[index].isInMemory = FALSE;
+        fcbTable[index].fileOffset = fileOffset;
+        fcbTable[index].mapLength = mapLength;
+        Pcb *curPcb = getCurPcb();
+        fcbTable[index].mapAddr = memoryPoolAlloc(&curPcb->memoryPool, mapLength);
+    }
+
+    return appendToPcb(getCurPcb(), index);
 }
 
 Bool closeFile(const char *filename)
@@ -231,7 +255,19 @@ Bool closeFile(const char *filename)
         return FALSE;
     }
     fcbTable[index].isOpen = FALSE;
-    return TRUE;
+
+    if (fcbTable[index].isMaped)
+    {
+        Pcb *curPcb = getCurPcb();
+        Uint32 starSector = (fcbTable[index].fileOffset - fcbTable[index].byteSize) / 512;
+        writeDisk(starSector, fcbTable[index].mapLength / 512, fcbTable[index].mapAddr);
+        memoryPoolFree(&curPcb->memoryPool, fcbTable[index].mapAddr);
+        fcbTable[index].mapAddr = NULL;
+        fcbTable[index].isInMemory = FALSE;
+    }
+
+    fcbTable[index].isMaped = FALSE;
+    return deleteFromPcb(getCurPcb(), index);
 }
 
 Bool createFile(const char *filename, const FileType fileType)
@@ -255,6 +291,8 @@ Bool createFile(const char *filename, const FileType fileType)
     fcbTable[index].fileType = fileType;
     fcbTable[index].isExists = TRUE;
     fcbTable[index].isOpen = FALSE;
+    fcbTable[index].isMaped = FALSE;
+    fcbTable[index].isInMemory = FALSE;
     strcpy(fcbTable[index].filename, filename);
     fcbTable[index].startSector = allocSector(1);
     fcbTable[index].sectorCount = 1;
@@ -287,7 +325,7 @@ Bool readFile(const char *filename, void *buffer)
         char c = getchar();
         if (c != '\0')
         {
-            ((char*)buffer)[0] = c;
+            ((char *)buffer)[0] = c;
             return TRUE;
         }
         return FALSE;
@@ -356,6 +394,32 @@ Bool deleteFile(const char *filename)
         (fileSystemInfo->fileDescriptorCount)--;
         writeBackToDisk();
         return TRUE;
+    }
+    return FALSE;
+}
+
+Bool appendToPcb(Pcb *pcb, Uint32 index)
+{
+    for (Uint32 i = 0; i < index; i++)
+    {
+        if (pcb->openedFcb[i] == -1)
+        {
+            pcb->openedFcb[i] = index;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+Bool deleteFromPcb(Pcb *pcb, Uint32 index)
+{
+    for (Uint32 i = 0; i < index; i++)
+    {
+        if (pcb->openedFcb[i] == index)
+        {
+            pcb->openedFcb[i] = -1;
+            return TRUE;
+        }
     }
     return FALSE;
 }

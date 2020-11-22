@@ -30,53 +30,51 @@ int main()
 	initScheduler();
 	initFileSystem();
 
-	Pcb *pcb = createProcess(1024, 3);
-	Tcb *tcb = createThread(pcb, 0, "funcb", (ThreadFunc*)0x10000000, NULL);
+	Pcb *pcb = createProcess(1024, 3, FALSE);
+	Tcb *tcb = createThread(pcb, 0, "funcb", (void *)0x10000000, NULL);
 	startProcess(pcb);
+	startThread(tcb);
+	loadProgram(pcb->cr3, 100000, 100, (void *)0x10000000);
 
-	Uint32 cr3;
+	char content[512] = TEXT;
+	char filename[] = "README.txt";
+	char list[512];
 
-	asm volatile(
-		"mov %%cr3,%%eax; \
-		 mov %%ebx,%%cr3; "
-		:"=a"(cr3)
-		:"b"(pcb->cr3)
-		:"memory"
-	);
+	getFileList(list);
 
-	_asm_read_disk(100000, (void *)0x10000000);
+	puts(list);
 
-	asm volatile(
-		"mov %0,%%cr3;"
-		:
-		:"r"(cr3)
-		:
-	);
-
+	if (createFile(filename, GernalFile) == TRUE)
+	{
+		ASSERT(openFile(filename, GernalOpen, 0, 512) == TRUE);
+		ASSERT(writeFile(filename, content, 512) == TRUE);
+		ASSERT(closeFile(filename) == TRUE);
+	}
 
 	interruptEnable();
 
-	// char str[512];
-	// str[1] = 0;
-	// ASSERT(openFile("stdin") != FALSE);
-	// ASSERT(openFile("stdout") != FALSE);
-	Uint32 count = 0;
+	// Uint32 count = 0;
 
 	while (1)
 	{
 		puts("Hello   ");
-		for (Uint32 i = 0; i < 9999999; i++);
-		++count;
-		if (count == 10)
-		{
-			pcb->status = Ready;
-			pcb->status = Ready;
-			pcb->status = Ready;
-			pcb->status = Ready;
-		}
-		// if (readFile("stdin", str) != FALSE)
-		// {
-		// 	ASSERT(writeFile("stdout", str, 512) != FALSE);
-		// }
+		asm volatile("hlt;");
+		for (Uint32 i = 0; i < 9999999; i++)
+			;
 	}
+}
+
+void loadProgram(Uint32 cr3, Uint32 startSector, Uint32 sectorCount, void *startAddr)
+{
+	Uint32 curCr3;
+	asm volatile(
+		"mov %%cr3,%%eax; \
+		 mov %%ebx,%%cr3;"
+		: "=a"(curCr3)
+		: "b"(cr3)
+		: "memory");
+	readDisk(startSector, sectorCount, startAddr);
+	asm volatile(
+		"mov %%eax,%%cr3;" ::"a"(curCr3)
+		:);
 }

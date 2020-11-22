@@ -33,7 +33,7 @@ Bool isPageDescriptorExists(Uint32 descriptor);
 
 Uint32 makePageDescriptor(void *physicalAddr, Uint32 present, Uint32 rw, Uint32 us, Uint32 pwt, Uint32 pcd, Uint32 gloabl, Uint32 avl);
 
-void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 us);
+void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 present,Uint32 us);
 
 void freeUserPage(void *destPageDirPhyAddr);
 

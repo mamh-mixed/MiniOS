@@ -10,13 +10,15 @@
 #include <gdt.h>
 #include <sched.h>
 
+#define PROCESS_MAX_OPEN 8
+
 void _asm_process_exit(Uint32 nextCR3, Uint32 nextEsp0);
 
 void _asm_block_or_suspend_process();
 
 void initProcessManagement();
 
-Pcb *createProcess(Uint32 id, Uint32 dpl);
+Pcb *createProcess(Uint32 id, Uint32 dpl, Bool isKernelProcess);
 
 void startProcess(Pcb *pcb);
 

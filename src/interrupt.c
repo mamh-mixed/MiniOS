@@ -34,7 +34,7 @@ void initIDT()
 
     idtIndex = 0x80;
     makeInterruptGateDescriptor(&idt[idtIndex], (_asm_intr_entry_table[48].entry),
-                                    INTERRULT_GATE_DESCRIPTOR_ATTRIBUTE_DPL_3);
+                                INTERRULT_GATE_DESCRIPTOR_ATTRIBUTE_DPL_3);
 }
 
 void setupIDT()
@@ -70,16 +70,7 @@ void interruptDispatcher(Uint32 vector, Uint32 extra)
     }
     else if (vector == 0x0e)
     {
-        Uint32 cr3, cr2;
-        asm volatile(
-            "mov %%cr3,%0; \
-             mov %%cr2,%1;"
-            :"=r"(cr3),"=r"(cr2)
-            :
-            :"memory"
-        );
-        Uint32 us = cr2 >= 0x80000000 ? 0 : 1;
-        installA4KBPage((void*)cr3, cr2, us);
+        pageFaultHandler();
     }
     else if (vector == 0x21)
     {
@@ -93,6 +84,52 @@ void interruptDispatcher(Uint32 vector, Uint32 extra)
             : "eax");
         keyboardDriver(scanCode);
     }
+}
+
+void pageFaultHandler()
+{
+    Uint32 cr3, cr2;
+    asm volatile(
+        "mov %%cr3,%0; \
+             mov %%cr2,%1;"
+        : "=r"(cr3), "=r"(cr2)
+        :
+        : "memory");
+    Pcb *curPcb = getCurPcb();
+    Fcb *mapedFcb = NULL;
+    for (Uint32 i = 0; i < PROCESS_MAX_OPEN; i++)
+    {
+        if (curPcb->openedFcb[i] != -1)
+        {
+            Fcb *fcb = getFcb(curPcb->openedFcb[i]);
+            if (fcb->isMaped)
+            {
+                mapedFcb = fcb;
+                break;
+            }
+        }
+    }
+    if (mapedFcb != NULL)
+    {
+        Uint32 mapRangeLeft = (Uint32)(mapedFcb->mapAddr);
+        Uint32 mapRangeRight = ((Uint32)(mapedFcb->mapAddr)) + mapedFcb->mapLength;
+        Uint32 startSector = mapedFcb->startSector + mapedFcb->fileOffset / 512;
+        if (cr2 >= mapRangeLeft && cr2 <= mapRangeRight)
+        {
+            Uint32 startAddr = (Uint32)(mapedFcb->mapAddr);
+            Uint32 endAddr = startAddr + mapedFcb->mapLength;
+
+            for (; startAddr < endAddr; startAddr += 4096)
+            {
+                installA4KBPage((void *)curPcb->cr3, startAddr, 1, 1);
+            }
+            readDisk(startSector, mapedFcb->mapLength / 512, mapedFcb->mapAddr);
+            return;
+        }
+    }
+
+    Uint32 us = cr2 >= 0x80000000 ? 0 : 1;
+    installA4KBPage((void *)cr3, cr2, 1, us);
 }
 
 InterruptStatus interruptGetStatus()

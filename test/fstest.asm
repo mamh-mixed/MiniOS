@@ -3,46 +3,85 @@
 section .text vstart=0x1000_0000
     jmp start
     start:
-        mov eax,1
-        mov ecx,1
-        push file_stdout
-        int 0x80
-        add esp,4
 
-        mov eax,1
-        mov ecx,1
-        push file_README
-        int 0x80
-        add esp,4
+        push dword 512
+        push dword 0
+        push dword 1
+        push dword file_README
+        call open
+        add esp,16
 
-        mov eax,4
-        mov ecx,2
-        push buffer0
-        push file_README
-        int 0x80
+        push dword 512
+        push dword 0
+        push dword 0
+        push dword file_stdout
+        call open
+        add esp,16
+
+        push dword buffer0
+        push dword file_README
+        call read
         add esp,8
 
-        mov eax,5
-        mov ecx,3
         push dword 512
-        push buffer0
-        push file_stdout
-        int 0x80
-        add esp,12
-
-        mov eax,7
-        mov ecx,0
-        int 0x80
-
-        mov eax,5
-        mov ecx,3
-        push dword 512
-        push buffer0
-        push file_stdout
-        int 0x80
+        push dword buffer0
+        push dword file_stdout
+        call write
         add esp,12
 
         jmp $
+
+    
+    open:
+        push ebp
+        mov ebp,esp
+        push ecx
+
+        mov eax,1
+        mov ecx,4
+        push dword [ebp+4*5]
+        push dword [ebp+4*4]
+        push dword [ebp+4*3]
+        push dword [ebp+4*2]
+        int 0x80
+        add esp,16
+
+        pop ecx
+        pop ebp
+        ret
+    
+    read:
+        push ebp
+        mov ebp,esp
+        push ecx
+
+        mov eax,4
+        mov ecx,2
+        push dword [ebp+4*3]
+        push dword [ebp+4*2]
+        int 0x80
+        add esp,8
+
+        pop ecx
+        pop ebp
+        ret
+
+    write:
+        push ebp
+        mov ebp,esp
+        push ecx
+
+        mov eax,5
+        mov ecx,3
+        push dword [ebp+4*4]
+        push dword [ebp+4*3]
+        push dword [ebp+4*2]
+        int 0x80
+        add esp,12
+
+        pop ecx
+        pop ebp
+        ret
 
 
 file_stdout db "stdout",0x00

@@ -1,6 +1,6 @@
 #include <thread.h>
 
-Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, ThreadFunc func, void *args)
+Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, void *entry, void *args)
 {
     Tcb *tcb = (Tcb *)sysMalloc(sizeof(Tcb));
     ASSERT(tcb != NULL);
@@ -31,7 +31,7 @@ Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, ThreadFunc func, void *
     tcb->esp3 = 0x2000;
     ASSERT(tcb->esp0 != 0);
     ASSERT(tcb->esp3 != 0);
-    tcb->eip = (Uint32)func;
+    tcb->eip = (Uint32)entry;
     if (pcb->dpl == 3)
     {
         tcb->esp0 = _asm_create_thread_dpl3(tcb->cs, tcb->ss3, tcb->ds, tcb->es, tcb->fs, tcb->gs, tcb->esp0, tcb->esp3, tcb->eip);
@@ -46,6 +46,7 @@ Tcb *createThread(Pcb *pcb, Uint32 id, const char *name, ThreadFunc func, void *
 
 void startThread(Tcb *tcb)
 {
+    tcb->status = Ready;
 }
 
 Bool suspendThread(Tcb *tcb)
@@ -70,5 +71,4 @@ Bool wakeUpThread(Tcb *tcb)
 
 void exitThread(Tcb *tcb)
 {
-
 }

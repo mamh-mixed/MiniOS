@@ -82,12 +82,12 @@ Uint32 makePageDescriptor(void *physicalAddr, Uint32 present, Uint32 readWrite, 
     return descriptor;
 }
 
-void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 us)
+void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 present,Uint32 us)
 {
     ASSERT(linearAddr != 0);
     Uint32 *pageDir = PAGE_DIR_BASE_ADDR;
 
-    Uint32 tempDescriptor = makePageDescriptor(destPageDirPhyAddr, 1, 1, us, 0, 0, 0, 0);
+    Uint32 tempDescriptor = makePageDescriptor(destPageDirPhyAddr, present, 1, us, 0, 0, 0, 0);
     pageDir[1022] = tempDescriptor;
 
     Uint32 *destPageDir = (Uint32 *)0xffffe000;
@@ -98,7 +98,7 @@ void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 us)
         needClear = TRUE;
         Uint32 *descriptorAddr = phyMalloc4KB();
         ASSERT(descriptorAddr != NULL);
-        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0, 0);
+        Uint32 descriptor = makePageDescriptor(descriptorAddr, present, 1, us, 0, 0, 0, 0);
         destPageDir[pageDirIndex] = descriptor;
     }
 
@@ -112,7 +112,7 @@ void installA4KBPage(void *destPageDirPhyAddr, Uint32 linearAddr, Uint32 us)
     {
         Uint32 *descriptorAddr = phyMalloc4KB();
         ASSERT(descriptorAddr != NULL);
-        Uint32 descriptor = makePageDescriptor(descriptorAddr, 1, 1, us, 0, 0, 0, 0);
+        Uint32 descriptor = makePageDescriptor(descriptorAddr, present, 1, us, 0, 0, 0, 0);
         pageTable[pageTableIndex] = descriptor;
     }
 

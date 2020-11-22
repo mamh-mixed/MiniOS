@@ -19,4 +19,7 @@
 
 #define TEXT ("No cost too great.\nNo mind to think.\nNo will to break.\nNo voice to cry suffering.\nBorn of God and Void.\nYou shall seal the blinding light that plagues their dreams.\nYou are the Vessel.\nYou are the Hollow Knight.\n")
 
+
+void loadProgram(Uint32 cr3, Uint32 startSector, Uint32 sectorCount, void *startAddr);
+
 #endif

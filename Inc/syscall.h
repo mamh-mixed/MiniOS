@@ -21,7 +21,7 @@ Uint32 syscallDispatcher(SysCall syscall, Uint32 argc, Uint32 *esp0);
 
 Uint32 syscallGetPid();
 
-Bool syscallOpen(const char *filename);
+Bool syscallOpen(const char *filename, OpenMode mode, Uint32 fileOffset, Uint32 mapLength);
 
 Bool syscallClose(const char *filename);
 

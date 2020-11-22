@@ -7,7 +7,7 @@ Uint32 syscallDispatcher(SysCall syscall, Uint32 argc, Uint32 *esp0)
     case GetPid:
         return syscallGetPid();
     case Open:
-        return syscallOpen((char *)esp0[0]);
+        return syscallOpen((char *)esp0[0], (OpenMode)esp0[1], esp0[2], esp0[3]);
     case Close:
         return syscallClose((char *)esp0[0]);
     case Create:
@@ -44,9 +44,9 @@ Uint32 syscallGetPid()
     return getCurPcb()->id;
 }
 
-Bool syscallOpen(const char *filename)
+Bool syscallOpen(const char *filename, OpenMode mode, Uint32 fileOffset, Uint32 mapLength)
 {
-    return openFile(filename);
+    return openFile(filename, mode, fileOffset, mapLength);
 }
 
 Bool syscallClose(const char *filename)

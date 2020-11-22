@@ -4,15 +4,31 @@ void initProcessManagement()
 {
 }
 
-Pcb *createProcess(Uint32 id, Uint32 dpl)
+Pcb *createProcess(Uint32 id, Uint32 dpl, Bool isKernelProcess)
 {
     Pcb *pcb = (Pcb *)sysMalloc(sizeof(Pcb));
     pcb->id = id;
     pcb->dpl = dpl;
-    pcb->status = Ready;
-    pcb->cr3 = initAUserPageDir();
+    pcb->status = Suspended;
+    if (isKernelProcess)
+    {
+        asm volatile(
+            "mov %%cr3,%%eax;"
+            : "=a"(pcb->cr3)::);
+    }
+    else
+    {
+        pcb->cr3 = initAUserPageDir();
+    }
     ASSERT(pcb->cr3 != 0);
-    // memoryPoolInit(&pcb->memoryPool, sysMalloc(0x8000), 0x00000000, 0x40000, 4096);
+    for (Uint32 i = 0; i < PROCESS_MAX_OPEN; i++)
+    {
+        pcb->openedFcb[i] = -1;
+    }
+    if (!isKernelProcess)
+    {
+        memoryPoolInit(&pcb->memoryPool, sysMalloc(49152), 0x20000000, 393216, 4096); // 0x2000_0000 ~ 0x7fff_ffff
+    }
     linkListNoSyncInit(&pcb->threadList);
     return pcb;
 }
@@ -20,6 +36,7 @@ Pcb *createProcess(Uint32 id, Uint32 dpl)
 void startProcess(Pcb *pcb)
 {
     InterruptStatus oldStatus = interruptDisable();
+    pcb->status = Ready;
     appendPcb(pcb);
     interruptSetStatus(oldStatus);
 }

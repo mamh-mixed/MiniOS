@@ -203,6 +203,7 @@ typedef struct
     Uint32 dpl;
     MemoryPool memoryPool;
     LinkList threadList;
+    Int32 openedFcb[8];
 } Pcb;
 
 typedef enum
@@ -231,9 +232,15 @@ typedef enum
 {
     Stdin,
     Stdout,
-    Gernal,
+    GernalFile,
     Directory
 } FileType;
+
+typedef enum
+{
+    GernalOpen,
+    MapOpen
+} OpenMode;
 
 #pragma pack(1)
 
@@ -252,11 +259,16 @@ typedef struct
     FileType fileType;
     Bool isExists;
     Bool isOpen;
+    Bool isMaped;
+    Bool isInMemory;
     char filename[256];
     Uint32 startSector;
     Uint32 sectorCount;
     Uint32 byteSize;
-    Byte padding[232]; // 凑够 512 Byte
+    void* mapAddr;
+    Uint32 fileOffset;
+    Uint32 mapLength;
+    Byte padding[212]; // 凑够 512 Byte
 } Fcb;
 
 #pragma pack()

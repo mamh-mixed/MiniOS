@@ -34,8 +34,12 @@ void switchToNext(Uint32 esp0);
 
 Pcb *getCurPcb();
 
+Pcb *getKernelPcb();
+
 Tcb *getCurTcb();
 
 Uint32 getCurRing();
+
+Bool hasReadyThread(LinkListItem *item, void *args);
 
 #endif
