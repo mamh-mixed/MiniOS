@@ -55,12 +55,16 @@ int main()
 
 	// Uint32 count = 0;
 
+	ASSERT(openFile("stdin", GernalOpen, 0, 0) == TRUE);
+
 	while (1)
 	{
-		puts("Hello   ");
-		asm volatile("hlt;");
-		for (Uint32 i = 0; i < 9999999; i++)
-			;
+		char str[3] = {0};
+		readFile("stdin", str);
+		if (str[0] != '\0')
+		{
+			puts(str);
+		}
 	}
 }
 

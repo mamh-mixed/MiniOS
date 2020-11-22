@@ -135,11 +135,13 @@ void freeUserPage(void *destPageDirPhyAddr)
     Uint32 *destPageDir = (Uint32 *)0xffffe000;
     for (Uint32 i = 0; i < 512; i++)
     {
+        // 如果当前的页目录项存在
         if (isPageDescriptorExists(destPageDir[i]))
         {
             Uint32 *pageTable = (Uint32 *)((Uint32)0xffe00000 | (i << 12));
             for (Uint32 j = 0; j < 1024; j++)
             {
+                // 如果当前的页表项存在
                 if (isPageDescriptorExists(pageTable[j]))
                 {
                     phyFree((void *)GET_BASE_ADDR(pageTable[j]));

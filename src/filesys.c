@@ -12,6 +12,8 @@ void initFileSystem()
     ASSERT(fileSystemInfo != NULL);
     ASSERT(fcbTable != NULL);
     readFileSystemInfo();
+
+    // 判断魔数，如果不存在则说明磁盘未格式化
     if (strcmp(fileSystemInfo->magic, FILE_SYSTEM_MAGIC))
     {
         formatDisk();
@@ -400,7 +402,7 @@ Bool deleteFile(const char *filename)
 
 Bool appendToPcb(Pcb *pcb, Uint32 index)
 {
-    for (Uint32 i = 0; i < index; i++)
+    for (Uint32 i = 0; i < PROCESS_MAX_OPEN; i++)
     {
         if (pcb->openedFcb[i] == -1)
         {
@@ -413,7 +415,7 @@ Bool appendToPcb(Pcb *pcb, Uint32 index)
 
 Bool deleteFromPcb(Pcb *pcb, Uint32 index)
 {
-    for (Uint32 i = 0; i < index; i++)
+    for (Uint32 i = 0; i < PROCESS_MAX_OPEN; i++)
     {
         if (pcb->openedFcb[i] == index)
         {

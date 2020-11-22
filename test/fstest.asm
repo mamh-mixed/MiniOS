@@ -1,5 +1,11 @@
 [bits 32]
 
+; 这个文件按照顺序做了下列事情：
+;   * 打开文件 README.txt
+;   * 打开文件 stdout
+;   * 读取文件 README.txt
+;   * 将读出出的内容写入 stdout
+
 section .text vstart=0x1000_0000
     jmp start
     start:
