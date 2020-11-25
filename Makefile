@@ -68,8 +68,15 @@ util : src/util.asm src/util.c inc/util.h Makefile
 
 test : test/fstest.asm test/empty.asm Makefile
 	$(call nasm,$(NASM_FORMAT_BIN),bin/fstest.bin,test/fstest.asm)
-	$(call nasm,$(NASM_FORMAT_BIN),bin/empty.bin,test/empty.asm)
+	# $(call nasm,$(NASM_FORMAT_BIN),bin/empty.bin,test/empty.asm)
+
+img : tools/bximage.sh bin/mbr.bin bin/loader.bin bin/kernel.bin bin/fstest.bin Makefile
+	@./tools/bximage.sh
+	@dd if=bin/mbr.bin of=bin/os.img bs=512 seek=0 conv=notrunc
+	@dd if=bin/loader.bin of=bin/os.img bs=512 seek=1 conv=notrunc
+	@dd if=bin/kernel.bin of=bin/os.img bs=512 seek=2 conv=notrunc
+	@dd if=bin/fstest.bin of=bin/os.img bs=512 seek=100000 conv=notrunc
 
 
 all : Makefile
-	@make clean mbr loader kernel test
+	@make clean mbr loader kernel test img

@@ -40,7 +40,7 @@ MiniOS 是一个基于 x86 的简易操作系统内核，我之前写过一个 [
 
 ### 编译内核和测试程序
 
-运行下列命令会在 `bin` 目录下生成相关的程序
+运行下列命令会在 `bin` 目录下生成相关的程序，然后会生成一个虚拟硬盘映像并将对应的程序写入。
 
 ```bash
 make all
@@ -52,28 +52,12 @@ make all
 * `fstest.bin`：测试用用户程序
 * `empty.bin`：请忽略此文件
 
-### 创建虚拟硬盘
-
-创建一个大小至少为 100MB 的虚拟硬盘（推荐使用 VHD 格式的虚拟硬盘）。
-
-### 向虚拟硬盘写入程序
-
-下面所称的扇区号均为逻辑扇区号，编址方式为 LBA28。
-
-* `mbr.bin`：写入 0 号扇区
-* `loader.bin`：写入 1 号扇区
-* `kernel.bin`：写入 2 号扇区
-* `fstest.bin`：写入 100000 号扇区
-* `empty.bin`：请忽略此文件
-
-> 你可以使用 `tools/fixvhdwr.exe` 程序在 Windows 下操作 VHD 格式的虚拟硬盘扇区。
-
 ### 配置 Bochs
 
 1. 运行 Bochs 安装目录下的 `bochsdbg.exe`。
 2. 在 `Edit Options ` 列中找到 `Disk & Boot` 项并双击。
 3. 选择打开的窗口中的 `Boot Opitons` 选项卡，然后将 `Boot Driver #1` 设置为 `disk`。
-4. 选择 `ATA chanel 0` 选项卡，选择 `First HD/CD on chanel 0` 子选项卡，将 `Path or pyhsical device name` 修改为虚拟硬盘的路径，`Type of disk image` 修改为 `vpc`，并将 `Cylinder`、`Heads` 和 `Sector per track` 修改为虚拟硬盘对应的参数。你可以使用 `tools/fixvhdwr.exe` 程序在 Windows 下查看虚拟硬盘的相应参数。
+4. 选择 `ATA chanel 0` 选项卡，选择 `First HD/CD on chanel 0` 子选项卡，将 `Path or pyhsical device name` 修改为虚拟硬盘的路径，`Type of disk image` 修改为 `flat`，并将 `Cylinder`、`Heads` 和 `Sector per track` 分别·修改为 203、16 和 63。你
 5. 关闭当前的窗口，在 `Edit Options ` 列中找到 `Memory` 项并双击。
 6. 选择 `Standard opitons` 选项卡，将 `Memory size [megabytes]` 设置为 1024，将 `Host alloced memory size [megabytes]` 设置为 2048。
 7. 点击 `Save`。
